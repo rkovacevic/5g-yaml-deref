@@ -1,0 +1,311 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: 5G-EIR Equipment Identity Check
+  description: 5G-EIR Equipment Identity Check Service
+servers:
+  - url: '{apiRoot}/n5g-eir-eic/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - n5g-eir-eic
+paths:
+  /equipment-status:
+    get:
+      summary: Retrieves the status of the UE
+      operationId: GetEquipmentStatus
+      tags:
+        - Equipment Status (Document)
+      parameters:
+        - name: pei
+          in: query
+          description: PEI of the UE
+          required: true
+          schema:
+            type: string
+            pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+        - name: supi
+          in: query
+          description: SUPI of the UE
+          required: false
+          schema:
+            type: string
+            pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+        - name: gpsi
+          in: query
+          description: GPSI of the UE
+          required: false
+          schema:
+            type: string
+            pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - WHITELISTED
+                      - BLACKLISTED
+                      - GREYLISTED
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: PEI Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '414':
+          description: URI Too Long
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            n5g-eir-eic: Access to the N5g-eir_EquipmentIdentityCheck API
+  schemas:
+    EirResponseData:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - WHITELISTED
+            - BLACKLISTED
+            - GREYLISTED
+    EquipmentStatus:
+      type: string
+      enum:
+        - WHITELISTED
+        - BLACKLISTED
+        - GREYLISTED
+externalDocs:
+  description: >-
+    3GPP TS 29.511 V15.3.0; 5G System; Equipment Identity Register Services;
+    Stage 3
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.511/'

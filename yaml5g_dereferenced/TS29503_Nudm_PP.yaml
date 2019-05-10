@@ -1,0 +1,362 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Nudm_PP
+  description: Nudm Parameter Provision Service
+externalDocs:
+  description: '3GPP TS 29.503 Unified Data Management Services, version 15.3.0'
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.503/'
+servers:
+  - url: '{apiRoot}/nudm-pp/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501.
+security:
+  - oAuth2ClientCredentials:
+      - nudm-pp
+  - {}
+paths:
+  '/{gpsi}/pp-data':
+    patch:
+      summary: provision parameters
+      operationId: Update
+      tags:
+        - Subscription Data Update
+      parameters:
+        - name: gpsi
+          in: path
+          description: Identifier of the UE
+          required: true
+          schema:
+            type: string
+            pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+      requestBody:
+        content:
+          application/merge-patch+json:
+            schema:
+              type: object
+              properties:
+                communicationCharacteristics:
+                  type: object
+                  properties:
+                    ppSubsRegTimer:
+                      type: object
+                      required:
+                        - subsRegTimer
+                        - afInstanceId
+                        - referenceId
+                      properties:
+                        subsRegTimer:
+                          type: integer
+                        afInstanceId:
+                          type: string
+                          format: uuid
+                        referenceId:
+                          type: integer
+                      nullable: true
+                    ppActiveTime:
+                      type: object
+                      required:
+                        - activeTime
+                        - afInstanceId
+                        - referenceId
+                      properties:
+                        activeTime:
+                          type: integer
+                        afInstanceId:
+                          type: string
+                          format: uuid
+                        referenceId:
+                          type: integer
+                      nullable: true
+                    ppDlPacketCount:
+                      type: integer
+                      nullable: true
+                supportedFeatures:
+                  type: string
+                  pattern: '^[A-Fa-f0-9]*$'
+        required: true
+      responses:
+        '204':
+          description: Expected response to a valid request
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            nudm-pp: Access to the nudm-pp API
+  schemas:
+    PpData:
+      type: object
+      properties:
+        communicationCharacteristics:
+          type: object
+          properties:
+            ppSubsRegTimer:
+              type: object
+              required:
+                - subsRegTimer
+                - afInstanceId
+                - referenceId
+              properties:
+                subsRegTimer:
+                  type: integer
+                afInstanceId:
+                  type: string
+                  format: uuid
+                referenceId:
+                  type: integer
+              nullable: true
+            ppActiveTime:
+              type: object
+              required:
+                - activeTime
+                - afInstanceId
+                - referenceId
+              properties:
+                activeTime:
+                  type: integer
+                afInstanceId:
+                  type: string
+                  format: uuid
+                referenceId:
+                  type: integer
+              nullable: true
+            ppDlPacketCount:
+              type: integer
+              nullable: true
+        supportedFeatures:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+    CommunicationCharacteristics:
+      type: object
+      properties:
+        ppSubsRegTimer:
+          type: object
+          required:
+            - subsRegTimer
+            - afInstanceId
+            - referenceId
+          properties:
+            subsRegTimer:
+              type: integer
+            afInstanceId:
+              type: string
+              format: uuid
+            referenceId:
+              type: integer
+          nullable: true
+        ppActiveTime:
+          type: object
+          required:
+            - activeTime
+            - afInstanceId
+            - referenceId
+          properties:
+            activeTime:
+              type: integer
+            afInstanceId:
+              type: string
+              format: uuid
+            referenceId:
+              type: integer
+          nullable: true
+        ppDlPacketCount:
+          type: integer
+          nullable: true
+    PpSubsRegTimer:
+      type: object
+      required:
+        - subsRegTimer
+        - afInstanceId
+        - referenceId
+      properties:
+        subsRegTimer:
+          type: integer
+        afInstanceId:
+          type: string
+          format: uuid
+        referenceId:
+          type: integer
+      nullable: true
+    PpActiveTime:
+      type: object
+      required:
+        - activeTime
+        - afInstanceId
+        - referenceId
+      properties:
+        activeTime:
+          type: integer
+        afInstanceId:
+          type: string
+          format: uuid
+        referenceId:
+          type: integer
+      nullable: true
+    ReferenceId:
+      type: integer
+    PpDlPacketCount:
+      type: integer
+      nullable: true

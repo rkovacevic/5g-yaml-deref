@@ -1,0 +1,802 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: Namf_MT
+  description: AMF Mobile Termination Service
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - namf-mt
+externalDocs:
+  description: 3GPP TS 29.518 V15.3.0; 5G System; Access and Mobility Management Services
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.518/'
+servers:
+  - url: '{apiRoot}/namf-mt/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501
+paths:
+  '/ue-contexts/{ueContextId}':
+    get:
+      summary: Namf_MT Provide Domain Selection Info service Operation
+      tags:
+        - ueContext (Document)
+      operationId: Provide Domain Selection Info
+      parameters:
+        - name: ueContextId
+          in: path
+          description: UE Context Identifier
+          required: true
+          schema:
+            type: string
+            pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+        - name: info-class
+          in: query
+          description: UE Context Information Class
+          schema:
+            anyOf:
+              - type: string
+                enum:
+                  - TADS
+              - type: string
+        - name: supported-features
+          in: query
+          description: Supported Features
+          schema:
+            type: string
+            pattern: '^[A-Fa-f0-9]*$'
+      responses:
+        '200':
+          description: Requested UE Context Information returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  supportVoPS:
+                    type: boolean
+                  supportVoPSn3gpp:
+                    type: boolean
+                  lastActTime:
+                    format: date-time
+                    type: string
+                  accessType:
+                    type: string
+                    enum:
+                      - 3GPP_ACCESS
+                      - NON_3GPP_ACCESS
+                  ratType:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - NR
+                          - EUTRA
+                          - WLAN
+                          - VIRTUAL
+                      - type: string
+                  supportedFeatures:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]*$'
+        '307':
+          description: Temporary Redirect
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '414':
+          description: URI Too Long
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+  '/ue-contexts/{ueContextId}/ue-reachind':
+    put:
+      summary: Namf_MT EnableUEReachability service Operation
+      tags:
+        - ueReachInd (Document)
+      operationId: EnableUeReachability
+      parameters:
+        - name: ueContextId
+          in: path
+          description: UE Context Identifier
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reachability:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - UNREACHABLE
+                        - REACHABLE
+                        - REGULATORY_ONLY
+                    - type: string
+                supportedFeatures:
+                  type: string
+                  pattern: '^[A-Fa-f0-9]*$'
+              required:
+                - reachability
+        required: true
+      responses:
+        '200':
+          description: UE has become reachable as desired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reachability:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - UNREACHABLE
+                          - REACHABLE
+                          - REGULATORY_ONLY
+                      - type: string
+                  supportedFeatures:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]*$'
+                required:
+                  - reachability
+        '307':
+          description: Temporary Redirect
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '504':
+          description: Gateway Timeout
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            namf-mt: Access to the Namf_MT API
+  schemas:
+    EnableUeReachabilityReqData:
+      type: object
+      properties:
+        reachability:
+          anyOf:
+            - type: string
+              enum:
+                - UNREACHABLE
+                - REACHABLE
+                - REGULATORY_ONLY
+            - type: string
+        supportedFeatures:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+      required:
+        - reachability
+    EnableUeReachabilityRspData:
+      type: object
+      properties:
+        reachability:
+          anyOf:
+            - type: string
+              enum:
+                - UNREACHABLE
+                - REACHABLE
+                - REGULATORY_ONLY
+            - type: string
+        supportedFeatures:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+      required:
+        - reachability
+    UeContextInfo:
+      type: object
+      properties:
+        supportVoPS:
+          type: boolean
+        supportVoPSn3gpp:
+          type: boolean
+        lastActTime:
+          format: date-time
+          type: string
+        accessType:
+          type: string
+          enum:
+            - 3GPP_ACCESS
+            - NON_3GPP_ACCESS
+        ratType:
+          anyOf:
+            - type: string
+              enum:
+                - NR
+                - EUTRA
+                - WLAN
+                - VIRTUAL
+            - type: string
+        supportedFeatures:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+    UeContextInfoClass:
+      anyOf:
+        - type: string
+          enum:
+            - TADS
+        - type: string

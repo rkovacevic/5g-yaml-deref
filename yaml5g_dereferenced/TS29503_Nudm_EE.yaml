@@ -1,0 +1,1296 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: Nudm_EE
+  description: Nudm Event Exposure Service
+externalDocs:
+  description: '3GPP TS 29.503 Unified Data Management Services, version 15.3.0'
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.503/'
+servers:
+  - url: '{apiRoot}/nudm-ee/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause subclause 4.4 of 3GPP TS 29.501.
+security:
+  - oAuth2ClientCredentials:
+      - nudm-ee
+  - {}
+paths:
+  '/{ueIdentity}/ee-subscriptions':
+    post:
+      summary: Subscribe
+      operationId: CreateEeSubscription
+      tags:
+        - Create EE Subscription
+      parameters:
+        - name: ueIdentity
+          in: path
+          description: >-
+            Represents the scope of the UE for which the subscription is
+            applied. Contains the GPSI of the user or the external group ID or
+            any UE.
+          required: true
+          schema:
+            type: string
+            pattern: >-
+              ^(msisdn-[0-9]{5,15}|.+|extid-[^@]+@[^@]+|extgroupid-[^@]+@[^@]+|anyUE)$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - callbackReference
+                - monitoringConfigurations
+              properties:
+                callbackReference:
+                  type: string
+                monitoringConfigurations:
+                  description: >-
+                    A map (list of key-value pairs where ReferenceId serves as
+                    key) of MonitoringConfigurations
+                  type: object
+                  additionalProperties:
+                    type: object
+                    required:
+                      - eventType
+                    properties:
+                      eventType:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - LOSS_OF_CONNECTIVITY
+                              - UE_REACHABILITY_FOR_DATA
+                              - UE_REACHABILITY_FOR_SMS
+                              - LOCATION_REPORTING
+                              - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                              - ROAMING_STATUS
+                              - COMMUNICATION_FAILURE
+                              - AVAILABILITY_AFTER_DNN_FAILURE
+                          - type: string
+                      immediateFlag:
+                        type: boolean
+                      locationReportingConfiguration:
+                        type: object
+                        required:
+                          - currentLocation
+                        properties:
+                          currentLocation:
+                            type: boolean
+                          oneTime:
+                            type: boolean
+                          accuracy:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - CELL_LEVEL
+                                  - TA_LEVEL
+                              - type: string
+                  minProperties: 1
+                reportingOptions:
+                  type: object
+                  properties:
+                    maxNumOfReports:
+                      type: integer
+                    expiry:
+                      format: date-time
+                      type: string
+                supportedFeatures:
+                  type: string
+                  pattern: '^[A-Fa-f0-9]*$'
+        required: true
+      responses:
+        '201':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - eeSubscription
+                properties:
+                  eeSubscription:
+                    type: object
+                    required:
+                      - callbackReference
+                      - monitoringConfigurations
+                    properties:
+                      callbackReference:
+                        type: string
+                      monitoringConfigurations:
+                        description: >-
+                          A map (list of key-value pairs where ReferenceId
+                          serves as key) of MonitoringConfigurations
+                        type: object
+                        additionalProperties:
+                          type: object
+                          required:
+                            - eventType
+                          properties:
+                            eventType:
+                              anyOf:
+                                - type: string
+                                  enum:
+                                    - LOSS_OF_CONNECTIVITY
+                                    - UE_REACHABILITY_FOR_DATA
+                                    - UE_REACHABILITY_FOR_SMS
+                                    - LOCATION_REPORTING
+                                    - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                                    - ROAMING_STATUS
+                                    - COMMUNICATION_FAILURE
+                                    - AVAILABILITY_AFTER_DNN_FAILURE
+                                - type: string
+                            immediateFlag:
+                              type: boolean
+                            locationReportingConfiguration:
+                              type: object
+                              required:
+                                - currentLocation
+                              properties:
+                                currentLocation:
+                                  type: boolean
+                                oneTime:
+                                  type: boolean
+                                accuracy:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - CELL_LEVEL
+                                        - TA_LEVEL
+                                    - type: string
+                        minProperties: 1
+                      reportingOptions:
+                        type: object
+                        properties:
+                          maxNumOfReports:
+                            type: integer
+                          expiry:
+                            format: date-time
+                            type: string
+                      supportedFeatures:
+                        type: string
+                        pattern: '^[A-Fa-f0-9]*$'
+                  numberOfUes:
+                    type: integer
+                    minimum: 0
+                  eventReports:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - referenceId
+                        - eventType
+                        - timeStamp
+                      properties:
+                        referenceId:
+                          type: integer
+                        eventType:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - LOSS_OF_CONNECTIVITY
+                                - UE_REACHABILITY_FOR_DATA
+                                - UE_REACHABILITY_FOR_SMS
+                                - LOCATION_REPORTING
+                                - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                                - ROAMING_STATUS
+                                - COMMUNICATION_FAILURE
+                                - AVAILABILITY_AFTER_DNN_FAILURE
+                            - type: string
+                        report:
+                          oneOf:
+                            - type: object
+                              required:
+                                - newPei
+                              properties:
+                                newPei:
+                                  type: string
+                                  pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+                            - type: object
+                              required:
+                                - roaming
+                                - newServingPlmn
+                              properties:
+                                roaming:
+                                  type: boolean
+                                newServingPlmn:
+                                  type: object
+                                  properties:
+                                    mcc:
+                                      type: string
+                                      pattern: '^\d{3}$'
+                                    mnc:
+                                      type: string
+                                      pattern: '^\d{2,3}$'
+                                  required:
+                                    - mcc
+                                    - mnc
+                        gpsi:
+                          type: string
+                          pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                        timeStamp:
+                          format: date-time
+                          type: string
+                    minItems: 1
+          headers:
+            Location:
+              description: >-
+                Contains the URI of the newly created resource, according to the
+                structure:
+                {apiRoot}/nudm-ee/v1/{ueIdentity}/ee-subscriptions/{subscriptionId}
+              required: true
+              schema:
+                type: string
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '501':
+          description: Not Implemented
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+      callbacks:
+        eventOccurrenceNotification:
+          '{request.body#/callbackReference}':
+            post:
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - referenceId
+                          - eventType
+                          - timeStamp
+                        properties:
+                          referenceId:
+                            type: integer
+                          eventType:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - LOSS_OF_CONNECTIVITY
+                                  - UE_REACHABILITY_FOR_DATA
+                                  - UE_REACHABILITY_FOR_SMS
+                                  - LOCATION_REPORTING
+                                  - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                                  - ROAMING_STATUS
+                                  - COMMUNICATION_FAILURE
+                                  - AVAILABILITY_AFTER_DNN_FAILURE
+                              - type: string
+                          report:
+                            oneOf:
+                              - type: object
+                                required:
+                                  - newPei
+                                properties:
+                                  newPei:
+                                    type: string
+                                    pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+                              - type: object
+                                required:
+                                  - roaming
+                                  - newServingPlmn
+                                properties:
+                                  roaming:
+                                    type: boolean
+                                  newServingPlmn:
+                                    type: object
+                                    properties:
+                                      mcc:
+                                        type: string
+                                        pattern: '^\d{3}$'
+                                      mnc:
+                                        type: string
+                                        pattern: '^\d{2,3}$'
+                                    required:
+                                      - mcc
+                                      - mnc
+                          gpsi:
+                            type: string
+                            pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                          timeStamp:
+                            format: date-time
+                            type: string
+                      minItems: 1
+              responses:
+                '204':
+                  description: Successful Notification response
+                '400':
+                  description: Bad request
+                  content:
+                    application/problem+json:
+                      schema:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          title:
+                            type: string
+                          status:
+                            type: integer
+                          detail:
+                            type: string
+                          instance:
+                            type: string
+                          cause:
+                            type: string
+                          invalidParams:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                param:
+                                  type: string
+                                reason:
+                                  type: string
+                              required:
+                                - param
+                            minItems: 1
+                '404':
+                  description: Not Found
+                  content:
+                    application/problem+json:
+                      schema:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          title:
+                            type: string
+                          status:
+                            type: integer
+                          detail:
+                            type: string
+                          instance:
+                            type: string
+                          cause:
+                            type: string
+                          invalidParams:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                param:
+                                  type: string
+                                reason:
+                                  type: string
+                              required:
+                                - param
+                            minItems: 1
+                '500':
+                  description: Internal Server Error
+                  content:
+                    application/problem+json:
+                      schema:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          title:
+                            type: string
+                          status:
+                            type: integer
+                          detail:
+                            type: string
+                          instance:
+                            type: string
+                          cause:
+                            type: string
+                          invalidParams:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                param:
+                                  type: string
+                                reason:
+                                  type: string
+                              required:
+                                - param
+                            minItems: 1
+                '503':
+                  description: Service Unavailable
+                  content:
+                    application/problem+json:
+                      schema:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          title:
+                            type: string
+                          status:
+                            type: integer
+                          detail:
+                            type: string
+                          instance:
+                            type: string
+                          cause:
+                            type: string
+                          invalidParams:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                param:
+                                  type: string
+                                reason:
+                                  type: string
+                              required:
+                                - param
+                            minItems: 1
+                default:
+                  description: Unexpected error
+  '/{ueIdentity}/ee-subscriptions/{subscriptionId}':
+    delete:
+      summary: Unsubscribe
+      operationId: DeleteEeSubscription
+      tags:
+        - Delete EE Subscription
+      parameters:
+        - name: ueIdentity
+          in: path
+          description: >-
+            Represents the scope of the UE for which the subscription is
+            applied. Contains the GPSI of the user or the external group ID or
+            any UE.
+          required: true
+          schema:
+            type: string
+            pattern: >-
+              ^(msisdn-[0-9]{5,15}|.+|extid-[^@]+@[^@]+|extgroupid-[^@]+@[^@]+|anyUE)$
+        - name: subscriptionId
+          in: path
+          description: Id of the EE Subscription
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successful response
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+    patch:
+      summary: Patch
+      operationId: UpdateEeSubscription
+      tags:
+        - Update EE Subscription
+      parameters:
+        - name: ueIdentity
+          in: path
+          description: >-
+            Represents the scope of the UE for which the subscription is
+            applied. Contains the GPSI of the user or the external group ID or
+            any UE.
+          required: true
+          schema:
+            type: string
+            pattern: >-
+              ^(msisdn-[0-9]{5,15}|.+|extid-[^@]+@[^@]+|extgroupid-[^@]+@[^@]+|anyUE)$
+        - name: subscriptionId
+          in: path
+          description: Id of the EE Subscription
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  op:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - add
+                          - copy
+                          - move
+                          - remove
+                          - replace
+                          - test
+                      - type: string
+                  path:
+                    type: string
+                  from:
+                    type: string
+                  value:
+                    nullable: true
+                required:
+                  - op
+                  - path
+              minItems: 1
+        required: true
+      responses:
+        '204':
+          description: Successful response
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            nudm-ee: Access to the nudm-ee API
+  schemas:
+    CreatedEeSubscription:
+      type: object
+      required:
+        - eeSubscription
+      properties:
+        eeSubscription:
+          type: object
+          required:
+            - callbackReference
+            - monitoringConfigurations
+          properties:
+            callbackReference:
+              type: string
+            monitoringConfigurations:
+              description: >-
+                A map (list of key-value pairs where ReferenceId serves as key)
+                of MonitoringConfigurations
+              type: object
+              additionalProperties:
+                type: object
+                required:
+                  - eventType
+                properties:
+                  eventType:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - LOSS_OF_CONNECTIVITY
+                          - UE_REACHABILITY_FOR_DATA
+                          - UE_REACHABILITY_FOR_SMS
+                          - LOCATION_REPORTING
+                          - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                          - ROAMING_STATUS
+                          - COMMUNICATION_FAILURE
+                          - AVAILABILITY_AFTER_DNN_FAILURE
+                      - type: string
+                  immediateFlag:
+                    type: boolean
+                  locationReportingConfiguration:
+                    type: object
+                    required:
+                      - currentLocation
+                    properties:
+                      currentLocation:
+                        type: boolean
+                      oneTime:
+                        type: boolean
+                      accuracy:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - CELL_LEVEL
+                              - TA_LEVEL
+                          - type: string
+              minProperties: 1
+            reportingOptions:
+              type: object
+              properties:
+                maxNumOfReports:
+                  type: integer
+                expiry:
+                  format: date-time
+                  type: string
+            supportedFeatures:
+              type: string
+              pattern: '^[A-Fa-f0-9]*$'
+        numberOfUes:
+          type: integer
+          minimum: 0
+        eventReports:
+          type: array
+          items:
+            type: object
+            required:
+              - referenceId
+              - eventType
+              - timeStamp
+            properties:
+              referenceId:
+                type: integer
+              eventType:
+                anyOf:
+                  - type: string
+                    enum:
+                      - LOSS_OF_CONNECTIVITY
+                      - UE_REACHABILITY_FOR_DATA
+                      - UE_REACHABILITY_FOR_SMS
+                      - LOCATION_REPORTING
+                      - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                      - ROAMING_STATUS
+                      - COMMUNICATION_FAILURE
+                      - AVAILABILITY_AFTER_DNN_FAILURE
+                  - type: string
+              report:
+                oneOf:
+                  - type: object
+                    required:
+                      - newPei
+                    properties:
+                      newPei:
+                        type: string
+                        pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+                  - type: object
+                    required:
+                      - roaming
+                      - newServingPlmn
+                    properties:
+                      roaming:
+                        type: boolean
+                      newServingPlmn:
+                        type: object
+                        properties:
+                          mcc:
+                            type: string
+                            pattern: '^\d{3}$'
+                          mnc:
+                            type: string
+                            pattern: '^\d{2,3}$'
+                        required:
+                          - mcc
+                          - mnc
+              gpsi:
+                type: string
+                pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+              timeStamp:
+                format: date-time
+                type: string
+          minItems: 1
+    EeSubscription:
+      type: object
+      required:
+        - callbackReference
+        - monitoringConfigurations
+      properties:
+        callbackReference:
+          type: string
+        monitoringConfigurations:
+          description: >-
+            A map (list of key-value pairs where ReferenceId serves as key) of
+            MonitoringConfigurations
+          type: object
+          additionalProperties:
+            type: object
+            required:
+              - eventType
+            properties:
+              eventType:
+                anyOf:
+                  - type: string
+                    enum:
+                      - LOSS_OF_CONNECTIVITY
+                      - UE_REACHABILITY_FOR_DATA
+                      - UE_REACHABILITY_FOR_SMS
+                      - LOCATION_REPORTING
+                      - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                      - ROAMING_STATUS
+                      - COMMUNICATION_FAILURE
+                      - AVAILABILITY_AFTER_DNN_FAILURE
+                  - type: string
+              immediateFlag:
+                type: boolean
+              locationReportingConfiguration:
+                type: object
+                required:
+                  - currentLocation
+                properties:
+                  currentLocation:
+                    type: boolean
+                  oneTime:
+                    type: boolean
+                  accuracy:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - CELL_LEVEL
+                          - TA_LEVEL
+                      - type: string
+          minProperties: 1
+        reportingOptions:
+          type: object
+          properties:
+            maxNumOfReports:
+              type: integer
+            expiry:
+              format: date-time
+              type: string
+        supportedFeatures:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+    MonitoringConfiguration:
+      type: object
+      required:
+        - eventType
+      properties:
+        eventType:
+          anyOf:
+            - type: string
+              enum:
+                - LOSS_OF_CONNECTIVITY
+                - UE_REACHABILITY_FOR_DATA
+                - UE_REACHABILITY_FOR_SMS
+                - LOCATION_REPORTING
+                - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                - ROAMING_STATUS
+                - COMMUNICATION_FAILURE
+                - AVAILABILITY_AFTER_DNN_FAILURE
+            - type: string
+        immediateFlag:
+          type: boolean
+        locationReportingConfiguration:
+          type: object
+          required:
+            - currentLocation
+          properties:
+            currentLocation:
+              type: boolean
+            oneTime:
+              type: boolean
+            accuracy:
+              anyOf:
+                - type: string
+                  enum:
+                    - CELL_LEVEL
+                    - TA_LEVEL
+                - type: string
+    LocationReportingConfiguration:
+      type: object
+      required:
+        - currentLocation
+      properties:
+        currentLocation:
+          type: boolean
+        oneTime:
+          type: boolean
+        accuracy:
+          anyOf:
+            - type: string
+              enum:
+                - CELL_LEVEL
+                - TA_LEVEL
+            - type: string
+    ReportingOptions:
+      type: object
+      properties:
+        maxNumOfReports:
+          type: integer
+        expiry:
+          format: date-time
+          type: string
+    MonitoringReport:
+      type: object
+      required:
+        - referenceId
+        - eventType
+        - timeStamp
+      properties:
+        referenceId:
+          type: integer
+        eventType:
+          anyOf:
+            - type: string
+              enum:
+                - LOSS_OF_CONNECTIVITY
+                - UE_REACHABILITY_FOR_DATA
+                - UE_REACHABILITY_FOR_SMS
+                - LOCATION_REPORTING
+                - CHANGE_OF_SUPI_PEI_ASSOCIATION
+                - ROAMING_STATUS
+                - COMMUNICATION_FAILURE
+                - AVAILABILITY_AFTER_DNN_FAILURE
+            - type: string
+        report:
+          oneOf:
+            - type: object
+              required:
+                - newPei
+              properties:
+                newPei:
+                  type: string
+                  pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+            - type: object
+              required:
+                - roaming
+                - newServingPlmn
+              properties:
+                roaming:
+                  type: boolean
+                newServingPlmn:
+                  type: object
+                  properties:
+                    mcc:
+                      type: string
+                      pattern: '^\d{3}$'
+                    mnc:
+                      type: string
+                      pattern: '^\d{2,3}$'
+                  required:
+                    - mcc
+                    - mnc
+        gpsi:
+          type: string
+          pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+        timeStamp:
+          format: date-time
+          type: string
+    Report:
+      oneOf:
+        - type: object
+          required:
+            - newPei
+          properties:
+            newPei:
+              type: string
+              pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+        - type: object
+          required:
+            - roaming
+            - newServingPlmn
+          properties:
+            roaming:
+              type: boolean
+            newServingPlmn:
+              type: object
+              properties:
+                mcc:
+                  type: string
+                  pattern: '^\d{3}$'
+                mnc:
+                  type: string
+                  pattern: '^\d{2,3}$'
+              required:
+                - mcc
+                - mnc
+    ChangeOfSupiPeiAssociationReport:
+      type: object
+      required:
+        - newPei
+      properties:
+        newPei:
+          type: string
+          pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+    RoamingStatusReport:
+      type: object
+      required:
+        - roaming
+        - newServingPlmn
+      properties:
+        roaming:
+          type: boolean
+        newServingPlmn:
+          type: object
+          properties:
+            mcc:
+              type: string
+              pattern: '^\d{3}$'
+            mnc:
+              type: string
+              pattern: '^\d{2,3}$'
+          required:
+            - mcc
+            - mnc
+    ReferenceId:
+      type: integer
+    MaxNumOfReports:
+      type: integer
+    EventType:
+      anyOf:
+        - type: string
+          enum:
+            - LOSS_OF_CONNECTIVITY
+            - UE_REACHABILITY_FOR_DATA
+            - UE_REACHABILITY_FOR_SMS
+            - LOCATION_REPORTING
+            - CHANGE_OF_SUPI_PEI_ASSOCIATION
+            - ROAMING_STATUS
+            - COMMUNICATION_FAILURE
+            - AVAILABILITY_AFTER_DNN_FAILURE
+        - type: string
+    LocationAccuracy:
+      anyOf:
+        - type: string
+          enum:
+            - CELL_LEVEL
+            - TA_LEVEL
+        - type: string

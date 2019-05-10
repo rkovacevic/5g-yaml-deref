@@ -1,0 +1,1383 @@
+openapi: 3.0.0
+info:
+  description: Binding Support Management Service API
+  version: 1.0.1
+  title: Nbsf_Management
+externalDocs:
+  description: 3GPP TS 29.521 V15.3.0; 5G System; Binding Support Management Service.
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.521/'
+servers:
+  - url: '{apiRoot}/nbsf-management/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause 4.4 of 3GPP TS 29.501.
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - nbsf-management
+paths:
+  /pcfBindings:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                supi:
+                  type: string
+                  pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+                gpsi:
+                  type: string
+                  pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                ipv4Addr:
+                  type: string
+                  pattern: >-
+                    ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                  example: 198.51.100.1
+                ipv6Prefix:
+                  type: string
+                  allOf:
+                    - pattern: >-
+                        ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+                    - pattern: >-
+                        ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+                  example: '2001:db8:abcd:12::0/64'
+                ipDomain:
+                  type: string
+                macAddr48:
+                  type: string
+                  pattern: '^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$'
+                dnn:
+                  type: string
+                pcfFqdn:
+                  type: string
+                pcfIpEndPoints:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      ipv4Address:
+                        type: string
+                        pattern: >-
+                          ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                        example: 198.51.100.1
+                      ipv6Address:
+                        type: string
+                        allOf:
+                          - pattern: >-
+                              ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+                          - pattern: >-
+                              ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+                        example: '2001:db8:85a3::8a2e:370:7334'
+                      transport:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - TCP
+                          - type: string
+                      port:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                  minItems: 1
+                  description: >-
+                    IP end points of the PCF hosting the
+                    Npcf_PolicyAuthorization service. At least one of pcfFqdn or
+                    pcfIpEndPoints shall be included if the PCF supports the
+                    Npcf_PolicyAuthorization service.
+                pcfDiamHost:
+                  type: string
+                  pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                pcfDiamRealm:
+                  type: string
+                  pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                snssai:
+                  type: object
+                  properties:
+                    sst:
+                      type: integer
+                      minimum: 0
+                      maximum: 255
+                    sd:
+                      type: string
+                      pattern: '^[A-Fa-f0-9]{6}$'
+                  required:
+                    - sst
+                suppFeat:
+                  type: string
+                  pattern: '^[A-Fa-f0-9]*$'
+                pcfId:
+                  type: string
+                  format: uuid
+                recoveryTime:
+                  format: date-time
+                  type: string
+              required:
+                - dnn
+                - snssai
+              oneOf:
+                - anyOf:
+                    - required:
+                        - ipv4Addr
+                    - required:
+                        - ipv6Prefix
+                - required:
+                    - macAddr48
+              anyOf:
+                - anyOf:
+                    - required:
+                        - pcfFqdn
+                    - required:
+                        - pcfIpEndPoints
+                - required:
+                    - pcfDiamHost
+                    - pcfDiamRealm
+      responses:
+        '201':
+          description: The creation of an individual PCF session binding.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  supi:
+                    type: string
+                    pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+                  gpsi:
+                    type: string
+                    pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                  ipv4Addr:
+                    type: string
+                    pattern: >-
+                      ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                    example: 198.51.100.1
+                  ipv6Prefix:
+                    type: string
+                    allOf:
+                      - pattern: >-
+                          ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+                      - pattern: >-
+                          ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+                    example: '2001:db8:abcd:12::0/64'
+                  ipDomain:
+                    type: string
+                  macAddr48:
+                    type: string
+                    pattern: '^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$'
+                  dnn:
+                    type: string
+                  pcfFqdn:
+                    type: string
+                  pcfIpEndPoints:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          pattern: >-
+                            ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                          example: 198.51.100.1
+                        ipv6Address:
+                          type: string
+                          allOf:
+                            - pattern: >-
+                                ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+                            - pattern: >-
+                                ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+                          example: '2001:db8:85a3::8a2e:370:7334'
+                        transport:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - TCP
+                            - type: string
+                        port:
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                    minItems: 1
+                    description: >-
+                      IP end points of the PCF hosting the
+                      Npcf_PolicyAuthorization service. At least one of pcfFqdn
+                      or pcfIpEndPoints shall be included if the PCF supports
+                      the Npcf_PolicyAuthorization service.
+                  pcfDiamHost:
+                    type: string
+                    pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                  pcfDiamRealm:
+                    type: string
+                    pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                  snssai:
+                    type: object
+                    properties:
+                      sst:
+                        type: integer
+                        minimum: 0
+                        maximum: 255
+                      sd:
+                        type: string
+                        pattern: '^[A-Fa-f0-9]{6}$'
+                    required:
+                      - sst
+                  suppFeat:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]*$'
+                  pcfId:
+                    type: string
+                    format: uuid
+                  recoveryTime:
+                    format: date-time
+                    type: string
+                required:
+                  - dnn
+                  - snssai
+                oneOf:
+                  - anyOf:
+                      - required:
+                          - ipv4Addr
+                      - required:
+                          - ipv6Prefix
+                  - required:
+                      - macAddr48
+                anyOf:
+                  - anyOf:
+                      - required:
+                          - pcfFqdn
+                      - required:
+                          - pcfIpEndPoints
+                  - required:
+                      - pcfDiamHost
+                      - pcfDiamRealm
+          headers:
+            Location:
+              description: >-
+                Contains the URI of the newly created resource, according to the
+                structure: {apiRoot}/nbsf-management/v1/pcfBindings/{bindingId}
+              required: true
+              schema:
+                type: string
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Generic Error
+    get:
+      parameters:
+        - name: ipv4Addr
+          in: query
+          description: The IPv4 Address of the served UE.
+          required: false
+          schema:
+            type: string
+            pattern: >-
+              ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+            example: 198.51.100.1
+        - name: ipv6Prefix
+          in: query
+          description: The IPv6 Address Prefix of the served UE.
+          required: false
+          schema:
+            type: string
+            allOf:
+              - pattern: >-
+                  ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+              - pattern: >-
+                  ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+            example: '2001:db8:abcd:12::0/64'
+        - name: macAddr48
+          in: query
+          description: The MAC Address of the served UE.
+          required: false
+          schema:
+            type: string
+            pattern: '^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$'
+        - name: dnn
+          in: query
+          description: DNN.
+          required: false
+          schema:
+            type: string
+        - name: supi
+          in: query
+          description: Subscription Permanent Identifier.
+          required: false
+          schema:
+            type: string
+            pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+        - name: gpsi
+          in: query
+          description: Generic Public Subscription Identifier
+          required: false
+          schema:
+            type: string
+            pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+        - name: snssai
+          in: query
+          description: The identification of slice.
+          required: false
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sst:
+                    type: integer
+                    minimum: 0
+                    maximum: 255
+                  sd:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]{6}$'
+                required:
+                  - sst
+        - name: ipDomain
+          in: query
+          description: The IPv4 address domain identifier.
+          required: false
+          schema:
+            type: string
+        - name: supp-feat
+          in: query
+          description: To filter irrelevant responses related to unsupported features
+          schema:
+            type: string
+            pattern: '^[A-Fa-f0-9]*$'
+      responses:
+        '200':
+          description: >-
+            The individual PCF session binding session binding information
+            resource matching the query parameter(s) is returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  supi:
+                    type: string
+                    pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+                  gpsi:
+                    type: string
+                    pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                  ipv4Addr:
+                    type: string
+                    pattern: >-
+                      ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                    example: 198.51.100.1
+                  ipv6Prefix:
+                    type: string
+                    allOf:
+                      - pattern: >-
+                          ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+                      - pattern: >-
+                          ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+                    example: '2001:db8:abcd:12::0/64'
+                  ipDomain:
+                    type: string
+                  macAddr48:
+                    type: string
+                    pattern: '^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$'
+                  dnn:
+                    type: string
+                  pcfFqdn:
+                    type: string
+                  pcfIpEndPoints:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ipv4Address:
+                          type: string
+                          pattern: >-
+                            ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                          example: 198.51.100.1
+                        ipv6Address:
+                          type: string
+                          allOf:
+                            - pattern: >-
+                                ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+                            - pattern: >-
+                                ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+                          example: '2001:db8:85a3::8a2e:370:7334'
+                        transport:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - TCP
+                            - type: string
+                        port:
+                          type: integer
+                          minimum: 0
+                          maximum: 65535
+                    minItems: 1
+                    description: >-
+                      IP end points of the PCF hosting the
+                      Npcf_PolicyAuthorization service. At least one of pcfFqdn
+                      or pcfIpEndPoints shall be included if the PCF supports
+                      the Npcf_PolicyAuthorization service.
+                  pcfDiamHost:
+                    type: string
+                    pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                  pcfDiamRealm:
+                    type: string
+                    pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+                  snssai:
+                    type: object
+                    properties:
+                      sst:
+                        type: integer
+                        minimum: 0
+                        maximum: 255
+                      sd:
+                        type: string
+                        pattern: '^[A-Fa-f0-9]{6}$'
+                    required:
+                      - sst
+                  suppFeat:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]*$'
+                  pcfId:
+                    type: string
+                    format: uuid
+                  recoveryTime:
+                    format: date-time
+                    type: string
+                required:
+                  - dnn
+                  - snssai
+                oneOf:
+                  - anyOf:
+                      - required:
+                          - ipv4Addr
+                      - required:
+                          - ipv6Prefix
+                  - required:
+                      - macAddr48
+                anyOf:
+                  - anyOf:
+                      - required:
+                          - pcfFqdn
+                      - required:
+                          - pcfIpEndPoints
+                  - required:
+                      - pcfDiamHost
+                      - pcfDiamRealm
+        '204':
+          description: >-
+            There is no PCF session binding information matching the query
+            parameter(s).
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '406':
+          description: 406 Not Acceptable
+        '414':
+          description: URI Too Long
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Generic Error
+  '/pcfBindings/{bindingId}':
+    delete:
+      parameters:
+        - name: bindingId
+          in: path
+          description: Represents the individual PCF Session Binding.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: >-
+            No Content. The Individual PCF session binding information resource
+            is deleted.
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Generic Error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            nbsf-management: Access to the Nbsf_Management API
+  schemas:
+    PcfBinding:
+      type: object
+      properties:
+        supi:
+          type: string
+          pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+        gpsi:
+          type: string
+          pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+        ipv4Addr:
+          type: string
+          pattern: >-
+            ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+          example: 198.51.100.1
+        ipv6Prefix:
+          type: string
+          allOf:
+            - pattern: >-
+                ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))(\/(([0-9])|([0-9]{2})|(1[0-1][0-9])|(12[0-8])))$
+            - pattern: >-
+                ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))(\/.+)$
+          example: '2001:db8:abcd:12::0/64'
+        ipDomain:
+          type: string
+        macAddr48:
+          type: string
+          pattern: '^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$'
+        dnn:
+          type: string
+        pcfFqdn:
+          type: string
+        pcfIpEndPoints:
+          type: array
+          items:
+            type: object
+            properties:
+              ipv4Address:
+                type: string
+                pattern: >-
+                  ^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+                example: 198.51.100.1
+              ipv6Address:
+                type: string
+                allOf:
+                  - pattern: >-
+                      ^((:|(0?|([1-9a-f][0-9a-f]{0,3}))):)((0?|([1-9a-f][0-9a-f]{0,3})):){0,6}(:|(0?|([1-9a-f][0-9a-f]{0,3})))$
+                  - pattern: >-
+                      ^((([^:]+:){7}([^:]+))|((([^:]+:)*[^:]+)?::(([^:]+:)*[^:]+)?))$
+                example: '2001:db8:85a3::8a2e:370:7334'
+              transport:
+                anyOf:
+                  - type: string
+                    enum:
+                      - TCP
+                  - type: string
+              port:
+                type: integer
+                minimum: 0
+                maximum: 65535
+          minItems: 1
+          description: >-
+            IP end points of the PCF hosting the Npcf_PolicyAuthorization
+            service. At least one of pcfFqdn or pcfIpEndPoints shall be included
+            if the PCF supports the Npcf_PolicyAuthorization service.
+        pcfDiamHost:
+          type: string
+          pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+        pcfDiamRealm:
+          type: string
+          pattern: '^([A-Za-z0-9]+(-[A-Za-z0-9]+).)+[a-z]{2,}$'
+        snssai:
+          type: object
+          properties:
+            sst:
+              type: integer
+              minimum: 0
+              maximum: 255
+            sd:
+              type: string
+              pattern: '^[A-Fa-f0-9]{6}$'
+          required:
+            - sst
+        suppFeat:
+          type: string
+          pattern: '^[A-Fa-f0-9]*$'
+        pcfId:
+          type: string
+          format: uuid
+        recoveryTime:
+          format: date-time
+          type: string
+      required:
+        - dnn
+        - snssai
+      oneOf:
+        - anyOf:
+            - required:
+                - ipv4Addr
+            - required:
+                - ipv6Prefix
+        - required:
+            - macAddr48
+      anyOf:
+        - anyOf:
+            - required:
+                - pcfFqdn
+            - required:
+                - pcfIpEndPoints
+        - required:
+            - pcfDiamHost
+            - pcfDiamRealm

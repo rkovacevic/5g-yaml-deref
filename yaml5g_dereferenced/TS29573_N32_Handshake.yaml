@@ -1,0 +1,1870 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: N32 Handshake API
+  description: N32-c Handshake
+servers:
+  - url: '{apiRoot}/n32c-handshake/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause 4.4 of 3GPP TS 29.501.
+externalDocs:
+  description: >-
+    3GPP TS 29.573 V15.1.0; 5G System; Public Land Mobile Network (PLMN)
+    Interconnection; Stage 3
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.573/'
+paths:
+  /exchange-capability:
+    post:
+      summary: Security Capability Negotiation
+      tags:
+        - Security Capability Negotiation
+      operationId: PostExchangeCapability
+      requestBody:
+        description: Custom operation for security capability negotiation
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - sender
+                - supportedSecCapabilityList
+              properties:
+                sender:
+                  type: string
+                supportedSecCapabilityList:
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - TLS
+                          - ALS
+                      - type: string
+                  minItems: 1
+      responses:
+        '200':
+          description: OK (Successful negitiation of security capabilities)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - sender
+                  - selectedSecCapability
+                properties:
+                  sender:
+                    type: string
+                  selectedSecCapability:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - TLS
+                          - ALS
+                      - type: string
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+  /exchange-params:
+    post:
+      summary: Parameter Exchange
+      tags:
+        - Parameter Exchange
+      operationId: PostExchangeParams
+      requestBody:
+        description: Custom operation for parameter exchange
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - n32fContextId
+              properties:
+                n32fContextId:
+                  type: string
+                jweCipherSuiteList:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                jwsCipherSuiteList:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                protectionPolicyInfo:
+                  type: object
+                  required:
+                    - apiIeMappingList
+                  properties:
+                    apiIeMappingList:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - apiSignature
+                          - apiMethod
+                          - IeList
+                        properties:
+                          apiSignature:
+                            oneOf:
+                              - type: string
+                              - type: object
+                                required:
+                                  - callbackType
+                                properties:
+                                  callbackType:
+                                    type: string
+                          apiMethod:
+                            anyOf:
+                              - type: string
+                                enum:
+                                  - GET
+                                  - PUT
+                                  - POST
+                                  - DELETE
+                                  - PATCH
+                                  - HEAD
+                                  - OPTIONS
+                                  - CONNECT
+                                  - TRACE
+                              - type: string
+                          IeList:
+                            type: array
+                            items:
+                              type: object
+                              required:
+                                - ieLoc
+                                - ieType
+                              properties:
+                                ieLoc:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - URI_PARAM
+                                        - HEADER
+                                        - BODY
+                                        - MULTIPART_BINARY
+                                    - type: string
+                                ieType:
+                                  anyOf:
+                                    - type: string
+                                      enum:
+                                        - UEID
+                                        - LOCATION
+                                        - KEY_MATERIAL
+                                        - AUTHENTICATION_MATERIAL
+                                        - AUTHORIZATION_TOKEN
+                                        - OTHER
+                                        - NONSENSITIVE
+                                    - type: string
+                                reqIe:
+                                  type: string
+                                rspIe:
+                                  type: string
+                                isModifiable:
+                                  type: boolean
+                            minItems: 1
+                      minItems: 1
+                    dataTypeEncPolicy:
+                      type: array
+                      items:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - UEID
+                              - LOCATION
+                              - KEY_MATERIAL
+                              - AUTHENTICATION_MATERIAL
+                              - AUTHORIZATION_TOKEN
+                              - OTHER
+                              - NONSENSITIVE
+                          - type: string
+                      minItems: 1
+      responses:
+        '200':
+          description: OK (Successful exchange of parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - n32fContextId
+                properties:
+                  n32fContextId:
+                    type: string
+                  selectedJweCipherSuite:
+                    type: string
+                  selectedJwsCipherSuite:
+                    type: string
+                  selProtectionPolicyInfo:
+                    type: object
+                    required:
+                      - apiIeMappingList
+                    properties:
+                      apiIeMappingList:
+                        type: array
+                        items:
+                          type: object
+                          required:
+                            - apiSignature
+                            - apiMethod
+                            - IeList
+                          properties:
+                            apiSignature:
+                              oneOf:
+                                - type: string
+                                - type: object
+                                  required:
+                                    - callbackType
+                                  properties:
+                                    callbackType:
+                                      type: string
+                            apiMethod:
+                              anyOf:
+                                - type: string
+                                  enum:
+                                    - GET
+                                    - PUT
+                                    - POST
+                                    - DELETE
+                                    - PATCH
+                                    - HEAD
+                                    - OPTIONS
+                                    - CONNECT
+                                    - TRACE
+                                - type: string
+                            IeList:
+                              type: array
+                              items:
+                                type: object
+                                required:
+                                  - ieLoc
+                                  - ieType
+                                properties:
+                                  ieLoc:
+                                    anyOf:
+                                      - type: string
+                                        enum:
+                                          - URI_PARAM
+                                          - HEADER
+                                          - BODY
+                                          - MULTIPART_BINARY
+                                      - type: string
+                                  ieType:
+                                    anyOf:
+                                      - type: string
+                                        enum:
+                                          - UEID
+                                          - LOCATION
+                                          - KEY_MATERIAL
+                                          - AUTHENTICATION_MATERIAL
+                                          - AUTHORIZATION_TOKEN
+                                          - OTHER
+                                          - NONSENSITIVE
+                                      - type: string
+                                  reqIe:
+                                    type: string
+                                  rspIe:
+                                    type: string
+                                  isModifiable:
+                                    type: boolean
+                              minItems: 1
+                        minItems: 1
+                      dataTypeEncPolicy:
+                        type: array
+                        items:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UEID
+                                - LOCATION
+                                - KEY_MATERIAL
+                                - AUTHENTICATION_MATERIAL
+                                - AUTHORIZATION_TOKEN
+                                - OTHER
+                                - NONSENSITIVE
+                            - type: string
+                        minItems: 1
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+  /n32f-terminate:
+    post:
+      summary: N32-f Context Terminate
+      tags:
+        - N32-f Context Terminate
+      operationId: PostN32fTerminate
+      requestBody:
+        description: Custom operation for n32-f context termination
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - n32fContextId
+              properties:
+                n32fContextId:
+                  type: string
+      responses:
+        '200':
+          description: OK (Successful exchange of parameters)
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - n32fContextId
+                properties:
+                  n32fContextId:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+  /n32f-error:
+    post:
+      summary: N32-f Error Reporting Procedure
+      tags:
+        - N32-f Error Report
+      operationId: PostN32fError
+      requestBody:
+        description: Custom operation for n32-f error reporting procedure
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - n32fMessageId
+                - n32fErrorType
+              properties:
+                n32fMessageId:
+                  type: string
+                n32fErrorType:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - INTEGRITY_CHECK_FAILED
+                        - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+                        - MODIFICATIONS_INSTRUCTIONS_FAILED
+                        - DECIPHERING_FAILED
+                        - MESSAGE_RECONSTRUCTION_FAILED
+                    - type: string
+                failedModificationList:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - ipxId
+                      - n32fErrorType
+                    properties:
+                      ipxId:
+                        type: string
+                      n32fErrorType:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - INTEGRITY_CHECK_FAILED
+                              - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+                              - MODIFICATIONS_INSTRUCTIONS_FAILED
+                              - DECIPHERING_FAILED
+                              - MESSAGE_RECONSTRUCTION_FAILED
+                          - type: string
+                  minItems: 1
+                errorDetailsList:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - attribute
+                      - msgReconstructFailReason
+                    properties:
+                      attribute:
+                        type: string
+                      msgReconstructFailReason:
+                        anyOf:
+                          - type: string
+                            enum:
+                              - INVALID_JSON_POINTER
+                              - INVALID_INDEX_TO_ENCRYPTED_BLOCK
+                              - INVALID_HTTP_HEADER
+                          - type: string
+                  minItems: 1
+      responses:
+        '204':
+          description: successful error reporting
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Unexpected error
+components:
+  schemas:
+    SecurityCapability:
+      anyOf:
+        - type: string
+          enum:
+            - TLS
+            - ALS
+        - type: string
+    ApiSignature:
+      oneOf:
+        - type: string
+        - type: object
+          required:
+            - callbackType
+          properties:
+            callbackType:
+              type: string
+    HttpMethod:
+      anyOf:
+        - type: string
+          enum:
+            - GET
+            - PUT
+            - POST
+            - DELETE
+            - PATCH
+            - HEAD
+            - OPTIONS
+            - CONNECT
+            - TRACE
+        - type: string
+    IeType:
+      anyOf:
+        - type: string
+          enum:
+            - UEID
+            - LOCATION
+            - KEY_MATERIAL
+            - AUTHENTICATION_MATERIAL
+            - AUTHORIZATION_TOKEN
+            - OTHER
+            - NONSENSITIVE
+        - type: string
+    IeLocation:
+      anyOf:
+        - type: string
+          enum:
+            - URI_PARAM
+            - HEADER
+            - BODY
+            - MULTIPART_BINARY
+        - type: string
+    IeInfo:
+      type: object
+      required:
+        - ieLoc
+        - ieType
+      properties:
+        ieLoc:
+          anyOf:
+            - type: string
+              enum:
+                - URI_PARAM
+                - HEADER
+                - BODY
+                - MULTIPART_BINARY
+            - type: string
+        ieType:
+          anyOf:
+            - type: string
+              enum:
+                - UEID
+                - LOCATION
+                - KEY_MATERIAL
+                - AUTHENTICATION_MATERIAL
+                - AUTHORIZATION_TOKEN
+                - OTHER
+                - NONSENSITIVE
+            - type: string
+        reqIe:
+          type: string
+        rspIe:
+          type: string
+        isModifiable:
+          type: boolean
+    ApiIeMapping:
+      type: object
+      required:
+        - apiSignature
+        - apiMethod
+        - IeList
+      properties:
+        apiSignature:
+          oneOf:
+            - type: string
+            - type: object
+              required:
+                - callbackType
+              properties:
+                callbackType:
+                  type: string
+        apiMethod:
+          anyOf:
+            - type: string
+              enum:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - PATCH
+                - HEAD
+                - OPTIONS
+                - CONNECT
+                - TRACE
+            - type: string
+        IeList:
+          type: array
+          items:
+            type: object
+            required:
+              - ieLoc
+              - ieType
+            properties:
+              ieLoc:
+                anyOf:
+                  - type: string
+                    enum:
+                      - URI_PARAM
+                      - HEADER
+                      - BODY
+                      - MULTIPART_BINARY
+                  - type: string
+              ieType:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UEID
+                      - LOCATION
+                      - KEY_MATERIAL
+                      - AUTHENTICATION_MATERIAL
+                      - AUTHORIZATION_TOKEN
+                      - OTHER
+                      - NONSENSITIVE
+                  - type: string
+              reqIe:
+                type: string
+              rspIe:
+                type: string
+              isModifiable:
+                type: boolean
+          minItems: 1
+    ProtectionPolicy:
+      type: object
+      required:
+        - apiIeMappingList
+      properties:
+        apiIeMappingList:
+          type: array
+          items:
+            type: object
+            required:
+              - apiSignature
+              - apiMethod
+              - IeList
+            properties:
+              apiSignature:
+                oneOf:
+                  - type: string
+                  - type: object
+                    required:
+                      - callbackType
+                    properties:
+                      callbackType:
+                        type: string
+              apiMethod:
+                anyOf:
+                  - type: string
+                    enum:
+                      - GET
+                      - PUT
+                      - POST
+                      - DELETE
+                      - PATCH
+                      - HEAD
+                      - OPTIONS
+                      - CONNECT
+                      - TRACE
+                  - type: string
+              IeList:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - ieLoc
+                    - ieType
+                  properties:
+                    ieLoc:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - URI_PARAM
+                            - HEADER
+                            - BODY
+                            - MULTIPART_BINARY
+                        - type: string
+                    ieType:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - UEID
+                            - LOCATION
+                            - KEY_MATERIAL
+                            - AUTHENTICATION_MATERIAL
+                            - AUTHORIZATION_TOKEN
+                            - OTHER
+                            - NONSENSITIVE
+                        - type: string
+                    reqIe:
+                      type: string
+                    rspIe:
+                      type: string
+                    isModifiable:
+                      type: boolean
+                minItems: 1
+          minItems: 1
+        dataTypeEncPolicy:
+          type: array
+          items:
+            anyOf:
+              - type: string
+                enum:
+                  - UEID
+                  - LOCATION
+                  - KEY_MATERIAL
+                  - AUTHENTICATION_MATERIAL
+                  - AUTHORIZATION_TOKEN
+                  - OTHER
+                  - NONSENSITIVE
+              - type: string
+          minItems: 1
+    SecNegotiateReqData:
+      type: object
+      required:
+        - sender
+        - supportedSecCapabilityList
+      properties:
+        sender:
+          type: string
+        supportedSecCapabilityList:
+          type: array
+          items:
+            anyOf:
+              - type: string
+                enum:
+                  - TLS
+                  - ALS
+              - type: string
+          minItems: 1
+    SecNegotiateRspData:
+      type: object
+      required:
+        - sender
+        - selectedSecCapability
+      properties:
+        sender:
+          type: string
+        selectedSecCapability:
+          anyOf:
+            - type: string
+              enum:
+                - TLS
+                - ALS
+            - type: string
+    SecParamExchReqData:
+      type: object
+      required:
+        - n32fContextId
+      properties:
+        n32fContextId:
+          type: string
+        jweCipherSuiteList:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        jwsCipherSuiteList:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        protectionPolicyInfo:
+          type: object
+          required:
+            - apiIeMappingList
+          properties:
+            apiIeMappingList:
+              type: array
+              items:
+                type: object
+                required:
+                  - apiSignature
+                  - apiMethod
+                  - IeList
+                properties:
+                  apiSignature:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        required:
+                          - callbackType
+                        properties:
+                          callbackType:
+                            type: string
+                  apiMethod:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - GET
+                          - PUT
+                          - POST
+                          - DELETE
+                          - PATCH
+                          - HEAD
+                          - OPTIONS
+                          - CONNECT
+                          - TRACE
+                      - type: string
+                  IeList:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - ieLoc
+                        - ieType
+                      properties:
+                        ieLoc:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - URI_PARAM
+                                - HEADER
+                                - BODY
+                                - MULTIPART_BINARY
+                            - type: string
+                        ieType:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UEID
+                                - LOCATION
+                                - KEY_MATERIAL
+                                - AUTHENTICATION_MATERIAL
+                                - AUTHORIZATION_TOKEN
+                                - OTHER
+                                - NONSENSITIVE
+                            - type: string
+                        reqIe:
+                          type: string
+                        rspIe:
+                          type: string
+                        isModifiable:
+                          type: boolean
+                    minItems: 1
+              minItems: 1
+            dataTypeEncPolicy:
+              type: array
+              items:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UEID
+                      - LOCATION
+                      - KEY_MATERIAL
+                      - AUTHENTICATION_MATERIAL
+                      - AUTHORIZATION_TOKEN
+                      - OTHER
+                      - NONSENSITIVE
+                  - type: string
+              minItems: 1
+    SecParamExchRspData:
+      type: object
+      required:
+        - n32fContextId
+      properties:
+        n32fContextId:
+          type: string
+        selectedJweCipherSuite:
+          type: string
+        selectedJwsCipherSuite:
+          type: string
+        selProtectionPolicyInfo:
+          type: object
+          required:
+            - apiIeMappingList
+          properties:
+            apiIeMappingList:
+              type: array
+              items:
+                type: object
+                required:
+                  - apiSignature
+                  - apiMethod
+                  - IeList
+                properties:
+                  apiSignature:
+                    oneOf:
+                      - type: string
+                      - type: object
+                        required:
+                          - callbackType
+                        properties:
+                          callbackType:
+                            type: string
+                  apiMethod:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - GET
+                          - PUT
+                          - POST
+                          - DELETE
+                          - PATCH
+                          - HEAD
+                          - OPTIONS
+                          - CONNECT
+                          - TRACE
+                      - type: string
+                  IeList:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - ieLoc
+                        - ieType
+                      properties:
+                        ieLoc:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - URI_PARAM
+                                - HEADER
+                                - BODY
+                                - MULTIPART_BINARY
+                            - type: string
+                        ieType:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UEID
+                                - LOCATION
+                                - KEY_MATERIAL
+                                - AUTHENTICATION_MATERIAL
+                                - AUTHORIZATION_TOKEN
+                                - OTHER
+                                - NONSENSITIVE
+                            - type: string
+                        reqIe:
+                          type: string
+                        rspIe:
+                          type: string
+                        isModifiable:
+                          type: boolean
+                    minItems: 1
+              minItems: 1
+            dataTypeEncPolicy:
+              type: array
+              items:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UEID
+                      - LOCATION
+                      - KEY_MATERIAL
+                      - AUTHENTICATION_MATERIAL
+                      - AUTHORIZATION_TOKEN
+                      - OTHER
+                      - NONSENSITIVE
+                  - type: string
+              minItems: 1
+    N32fContextInfo:
+      type: object
+      required:
+        - n32fContextId
+      properties:
+        n32fContextId:
+          type: string
+    CallbackName:
+      type: object
+      required:
+        - callbackType
+      properties:
+        callbackType:
+          type: string
+    N32fErrorInfo:
+      type: object
+      required:
+        - n32fMessageId
+        - n32fErrorType
+      properties:
+        n32fMessageId:
+          type: string
+        n32fErrorType:
+          anyOf:
+            - type: string
+              enum:
+                - INTEGRITY_CHECK_FAILED
+                - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+                - MODIFICATIONS_INSTRUCTIONS_FAILED
+                - DECIPHERING_FAILED
+                - MESSAGE_RECONSTRUCTION_FAILED
+            - type: string
+        failedModificationList:
+          type: array
+          items:
+            type: object
+            required:
+              - ipxId
+              - n32fErrorType
+            properties:
+              ipxId:
+                type: string
+              n32fErrorType:
+                anyOf:
+                  - type: string
+                    enum:
+                      - INTEGRITY_CHECK_FAILED
+                      - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+                      - MODIFICATIONS_INSTRUCTIONS_FAILED
+                      - DECIPHERING_FAILED
+                      - MESSAGE_RECONSTRUCTION_FAILED
+                  - type: string
+          minItems: 1
+        errorDetailsList:
+          type: array
+          items:
+            type: object
+            required:
+              - attribute
+              - msgReconstructFailReason
+            properties:
+              attribute:
+                type: string
+              msgReconstructFailReason:
+                anyOf:
+                  - type: string
+                    enum:
+                      - INVALID_JSON_POINTER
+                      - INVALID_INDEX_TO_ENCRYPTED_BLOCK
+                      - INVALID_HTTP_HEADER
+                  - type: string
+          minItems: 1
+    FailedModificationInfo:
+      type: object
+      required:
+        - ipxId
+        - n32fErrorType
+      properties:
+        ipxId:
+          type: string
+        n32fErrorType:
+          anyOf:
+            - type: string
+              enum:
+                - INTEGRITY_CHECK_FAILED
+                - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+                - MODIFICATIONS_INSTRUCTIONS_FAILED
+                - DECIPHERING_FAILED
+                - MESSAGE_RECONSTRUCTION_FAILED
+            - type: string
+    N32fErrorDetail:
+      type: object
+      required:
+        - attribute
+        - msgReconstructFailReason
+      properties:
+        attribute:
+          type: string
+        msgReconstructFailReason:
+          anyOf:
+            - type: string
+              enum:
+                - INVALID_JSON_POINTER
+                - INVALID_INDEX_TO_ENCRYPTED_BLOCK
+                - INVALID_HTTP_HEADER
+            - type: string
+    N32fErrorType:
+      anyOf:
+        - type: string
+          enum:
+            - INTEGRITY_CHECK_FAILED
+            - INTEGRITY_CHECK_ON_MODIFICATIONS_FAILED
+            - MODIFICATIONS_INSTRUCTIONS_FAILED
+            - DECIPHERING_FAILED
+            - MESSAGE_RECONSTRUCTION_FAILED
+        - type: string
+    FailureReason:
+      anyOf:
+        - type: string
+          enum:
+            - INVALID_JSON_POINTER
+            - INVALID_INDEX_TO_ENCRYPTED_BLOCK
+            - INVALID_HTTP_HEADER
+        - type: string

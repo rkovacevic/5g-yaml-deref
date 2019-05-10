@@ -1,0 +1,391 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: NRF OAuth2
+  description: NRF OAuth2 Authorization
+paths:
+  /oauth2/token:
+    post:
+      summary: Access Token Request
+      operationId: AccessTokenRequest
+      tags:
+        - Access Token Request
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - grant_type
+                - nfInstanceId
+                - scope
+              properties:
+                grant_type:
+                  type: string
+                  enum:
+                    - client_credentials
+                nfInstanceId:
+                  type: string
+                  format: uuid
+                nfType:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - NRF
+                        - UDM
+                        - AMF
+                        - SMF
+                        - AUSF
+                        - NEF
+                        - PCF
+                        - SMSF
+                        - NSSF
+                        - UDR
+                        - LMF
+                        - GMLC
+                        - 5G_EIR
+                        - SEPP
+                        - UPF
+                        - N3IWF
+                        - AF
+                        - UDSF
+                        - BSF
+                        - CHF
+                        - NWDAF
+                    - type: string
+                targetNfType:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - NRF
+                        - UDM
+                        - AMF
+                        - SMF
+                        - AUSF
+                        - NEF
+                        - PCF
+                        - SMSF
+                        - NSSF
+                        - UDR
+                        - LMF
+                        - GMLC
+                        - 5G_EIR
+                        - SEPP
+                        - UPF
+                        - N3IWF
+                        - AF
+                        - UDSF
+                        - BSF
+                        - CHF
+                        - NWDAF
+                    - type: string
+                scope:
+                  type: string
+                  pattern: '^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$'
+                targetNfInstanceId:
+                  type: string
+                  format: uuid
+                requesterPlmn:
+                  type: object
+                  properties:
+                    mcc:
+                      type: string
+                      pattern: '^\d{3}$'
+                    mnc:
+                      type: string
+                      pattern: '^\d{2,3}$'
+                  required:
+                    - mcc
+                    - mnc
+                targetPlmn:
+                  type: object
+                  properties:
+                    mcc:
+                      type: string
+                      pattern: '^\d{3}$'
+                    mnc:
+                      type: string
+                      pattern: '^\d{2,3}$'
+                  required:
+                    - mcc
+                    - mnc
+        required: true
+      responses:
+        '200':
+          description: Successful Access Token Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - access_token
+                  - token_type
+                properties:
+                  access_token:
+                    type: string
+                    description: >-
+                      JWS Compact Serialized representation of JWS signed JSON
+                      object (AccessTokenClaims)
+                  token_type:
+                    type: string
+                    enum:
+                      - Bearer
+                  expires_in:
+                    type: integer
+                  scope:
+                    type: string
+                    pattern: '^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$'
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                  - no-store
+            Pragma:
+              required: true
+              schema:
+                type: string
+                enum:
+                  - no-cache
+        '400':
+          description: Error in the Access Token Request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - error
+                properties:
+                  error:
+                    type: string
+                    enum:
+                      - invalid_request
+                      - invalid_client
+                      - invalid_grant
+                      - unauthorized_client
+                      - unsupported_grant_type
+                      - invalid_scope
+                  error_description:
+                    type: string
+                  error_uri:
+                    type: string
+          headers:
+            Cache-Control:
+              required: true
+              schema:
+                type: string
+                enum:
+                  - no-store
+            Pragma:
+              required: true
+              schema:
+                type: string
+                enum:
+                  - no-cache
+components:
+  headers:
+    cache-control:
+      required: true
+      schema:
+        type: string
+        enum:
+          - no-store
+    pragma:
+      required: true
+      schema:
+        type: string
+        enum:
+          - no-cache
+  schemas:
+    AccessTokenReq:
+      type: object
+      required:
+        - grant_type
+        - nfInstanceId
+        - scope
+      properties:
+        grant_type:
+          type: string
+          enum:
+            - client_credentials
+        nfInstanceId:
+          type: string
+          format: uuid
+        nfType:
+          anyOf:
+            - type: string
+              enum:
+                - NRF
+                - UDM
+                - AMF
+                - SMF
+                - AUSF
+                - NEF
+                - PCF
+                - SMSF
+                - NSSF
+                - UDR
+                - LMF
+                - GMLC
+                - 5G_EIR
+                - SEPP
+                - UPF
+                - N3IWF
+                - AF
+                - UDSF
+                - BSF
+                - CHF
+                - NWDAF
+            - type: string
+        targetNfType:
+          anyOf:
+            - type: string
+              enum:
+                - NRF
+                - UDM
+                - AMF
+                - SMF
+                - AUSF
+                - NEF
+                - PCF
+                - SMSF
+                - NSSF
+                - UDR
+                - LMF
+                - GMLC
+                - 5G_EIR
+                - SEPP
+                - UPF
+                - N3IWF
+                - AF
+                - UDSF
+                - BSF
+                - CHF
+                - NWDAF
+            - type: string
+        scope:
+          type: string
+          pattern: '^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$'
+        targetNfInstanceId:
+          type: string
+          format: uuid
+        requesterPlmn:
+          type: object
+          properties:
+            mcc:
+              type: string
+              pattern: '^\d{3}$'
+            mnc:
+              type: string
+              pattern: '^\d{2,3}$'
+          required:
+            - mcc
+            - mnc
+        targetPlmn:
+          type: object
+          properties:
+            mcc:
+              type: string
+              pattern: '^\d{3}$'
+            mnc:
+              type: string
+              pattern: '^\d{2,3}$'
+          required:
+            - mcc
+            - mnc
+    AccessTokenRsp:
+      type: object
+      required:
+        - access_token
+        - token_type
+      properties:
+        access_token:
+          type: string
+          description: >-
+            JWS Compact Serialized representation of JWS signed JSON object
+            (AccessTokenClaims)
+        token_type:
+          type: string
+          enum:
+            - Bearer
+        expires_in:
+          type: integer
+        scope:
+          type: string
+          pattern: '^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$'
+    AccessTokenClaims:
+      type: object
+      required:
+        - iss
+        - sub
+        - aud
+        - scope
+        - exp
+      properties:
+        iss:
+          type: string
+          format: uuid
+        sub:
+          type: string
+          format: uuid
+        aud:
+          anyOf:
+            - anyOf:
+                - type: string
+                  enum:
+                    - NRF
+                    - UDM
+                    - AMF
+                    - SMF
+                    - AUSF
+                    - NEF
+                    - PCF
+                    - SMSF
+                    - NSSF
+                    - UDR
+                    - LMF
+                    - GMLC
+                    - 5G_EIR
+                    - SEPP
+                    - UPF
+                    - N3IWF
+                    - AF
+                    - UDSF
+                    - BSF
+                    - CHF
+                    - NWDAF
+                - type: string
+            - type: array
+              items:
+                type: string
+                format: uuid
+              minItems: 1
+        scope:
+          type: string
+          pattern: '^([a-zA-Z0-9_-]+)( [a-zA-Z0-9_-]+)*$'
+        exp:
+          type: integer
+    AccessTokenErr:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          enum:
+            - invalid_request
+            - invalid_client
+            - invalid_grant
+            - unauthorized_client
+            - unsupported_grant_type
+            - invalid_scope
+        error_description:
+          type: string
+        error_uri:
+          type: string
+externalDocs:
+  description: >-
+    3GPP TS 29.510 V15.3.0; 5G System; Network Function Repository Services;
+    Stage 3
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.510/'

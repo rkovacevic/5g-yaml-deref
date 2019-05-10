@@ -1,0 +1,3592 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: LMF Location
+  description: LMF Location Service
+servers:
+  - url: '{apiRoot}/nlmf-loc/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause 4.4 of 3GPP TS 29.501
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - nlmf-loc
+paths:
+  /determine-location:
+    post:
+      summary: Determine Location of an UE
+      operationId: DetermineLocation
+      tags:
+        - Determine Location
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              not:
+                required:
+                  - ecgi
+                  - ncgi
+              properties:
+                externalClientType:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - EMERGENCY_SERVICES
+                        - VALUE_ADDED_SERVICES
+                        - PLMN_OPERATOR_SERVICES
+                        - LAWFUL_INTERCEPT_SERVICES
+                        - PLMN_OPERATOR_BROADCAST_SERVICES
+                        - PLMN_OPERATOR_OM
+                        - PLMN_OPERATOR_ANONYMOUS_STATISTICS
+                        - PLMN_OPERATOR_TARGET_MS_SERVICE_SUPPORT
+                    - type: string
+                correlationID:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                amfId:
+                  type: string
+                  format: uuid
+                locationQoS:
+                  type: object
+                  properties:
+                    hAccuracy:
+                      type: number
+                      format: float
+                      minimum: 0
+                    vAccuracy:
+                      type: number
+                      format: float
+                      minimum: 0
+                    verticalRequested:
+                      type: boolean
+                    responseTime:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - LOW_DELAY
+                            - DELAY_TOLERANT
+                        - type: string
+                supportedGADShapes:
+                  type: array
+                  items:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - POINT
+                          - POINT_UNCERTAINTY_CIRCLE
+                          - POINT_UNCERTAINTY_ELLIPSE
+                          - POLYGON
+                          - POINT_ALTITUDE
+                          - POINT_ALTITUDE_UNCERTAINTY
+                          - ELLIPSOID_ARC
+                      - type: string
+                  minItems: 1
+                supi:
+                  type: string
+                  pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+                pei:
+                  type: string
+                  pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+                gpsi:
+                  type: string
+                  pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+                ecgi:
+                  type: object
+                  properties:
+                    plmnId:
+                      type: object
+                      properties:
+                        mcc:
+                          type: string
+                          pattern: '^\d{3}$'
+                        mnc:
+                          type: string
+                          pattern: '^\d{2,3}$'
+                      required:
+                        - mcc
+                        - mnc
+                    eutraCellId:
+                      type: string
+                      pattern: '^[A-Fa-f0-9]{7}$'
+                  required:
+                    - plmnId
+                    - eutraCellId
+                ncgi:
+                  type: object
+                  properties:
+                    plmnId:
+                      type: object
+                      properties:
+                        mcc:
+                          type: string
+                          pattern: '^\d{3}$'
+                        mnc:
+                          type: string
+                          pattern: '^\d{2,3}$'
+                      required:
+                        - mcc
+                        - mnc
+                    nrCellId:
+                      type: string
+                      pattern: '^[A-Fa-f0-9]{9}$'
+                  required:
+                    - plmnId
+                    - nrCellId
+                priority:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - HIGHEST_PRIORITY
+                        - NORMAL_PRIORITY
+                    - type: string
+                velocityRequested:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - VELOCITY_IS_NOT_REQUESTED
+                        - VELOCITY_IS_REQUESTED
+                    - type: string
+        required: true
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - locationEstimate
+                properties:
+                  locationEstimate:
+                    anyOf:
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                              - uncertainty
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                              uncertainty:
+                                type: number
+                                format: float
+                                minimum: 0
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                              - uncertaintyEllipse
+                              - confidence
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                              uncertaintyEllipse:
+                                type: object
+                                required:
+                                  - semiMajor
+                                  - semiMinor
+                                  - orientationMajor
+                                properties:
+                                  semiMajor:
+                                    type: number
+                                    format: float
+                                    minimum: 0
+                                  semiMinor:
+                                    type: number
+                                    format: float
+                                    minimum: 0
+                                  orientationMajor:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 180
+                              confidence:
+                                type: integer
+                                minimum: 0
+                                maximum: 100
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - pointList
+                            properties:
+                              pointList:
+                                type: array
+                                items:
+                                  type: object
+                                  required:
+                                    - lon
+                                    - lat
+                                  properties:
+                                    lon:
+                                      type: number
+                                      format: float
+                                      minimum: -180
+                                      maximum: 180
+                                    lat:
+                                      type: number
+                                      format: float
+                                      minimum: -90
+                                      maximum: 90
+                                minItems: 3
+                                maxItems: 15
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                              - altitude
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                              altitude:
+                                type: number
+                                format: float
+                                minimum: -32767
+                                maximum: 32767
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                              - altitude
+                              - uncertaintyEllipse
+                              - uncertaintyAltitude
+                              - confidence
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                              altitude:
+                                type: number
+                                format: float
+                                minimum: -32767
+                                maximum: 32767
+                              uncertaintyEllipse:
+                                type: object
+                                required:
+                                  - semiMajor
+                                  - semiMinor
+                                  - orientationMajor
+                                properties:
+                                  semiMajor:
+                                    type: number
+                                    format: float
+                                    minimum: 0
+                                  semiMinor:
+                                    type: number
+                                    format: float
+                                    minimum: 0
+                                  orientationMajor:
+                                    type: integer
+                                    minimum: 0
+                                    maximum: 180
+                              uncertaintyAltitude:
+                                type: number
+                                format: float
+                                minimum: 0
+                              confidence:
+                                type: integer
+                                minimum: 0
+                                maximum: 100
+                      - allOf:
+                          - type: object
+                            required:
+                              - shape
+                            properties:
+                              shape:
+                                anyOf:
+                                  - type: string
+                                    enum:
+                                      - POINT
+                                      - POINT_UNCERTAINTY_CIRCLE
+                                      - POINT_UNCERTAINTY_ELLIPSE
+                                      - POLYGON
+                                      - POINT_ALTITUDE
+                                      - POINT_ALTITUDE_UNCERTAINTY
+                                      - ELLIPSOID_ARC
+                                  - type: string
+                            discriminator:
+                              propertyName: shape
+                              mapping:
+                                POINT: '#/components/schemas/Point'
+                                POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                                POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                                POLYGON: '#/components/schemas/Polygon'
+                                POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                                POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                                ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                          - type: object
+                            required:
+                              - point
+                              - innerRadius
+                              - uncertaintyRadius
+                              - offsetAngle
+                              - includedAngle
+                              - confidence
+                            properties:
+                              point:
+                                type: object
+                                required:
+                                  - lon
+                                  - lat
+                                properties:
+                                  lon:
+                                    type: number
+                                    format: float
+                                    minimum: -180
+                                    maximum: 180
+                                  lat:
+                                    type: number
+                                    format: float
+                                    minimum: -90
+                                    maximum: 90
+                              innerRadius:
+                                type: integer
+                                format: int32
+                                minimum: 0
+                                maximum: 327675
+                              uncertaintyRadius:
+                                type: number
+                                format: float
+                                minimum: 0
+                              offsetAngle:
+                                type: integer
+                                minimum: 0
+                                maximum: 360
+                              includedAngle:
+                                type: integer
+                                minimum: 0
+                                maximum: 360
+                              confidence:
+                                type: integer
+                                minimum: 0
+                                maximum: 100
+                  accuracyFulfilmentIndicator:
+                    anyOf:
+                      - type: string
+                        enum:
+                          - REQUESTED_ACCURACY_FULFILLED
+                          - REQUESTED_ACCURACY_NOT_FULFILLED
+                      - type: string
+                  ageOfLocationEstimate:
+                    type: integer
+                    minimum: 0
+                    maximum: 32767
+                  velocityEstimate:
+                    oneOf:
+                      - type: object
+                        required:
+                          - hSpeed
+                          - bearing
+                        properties:
+                          hSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 2047
+                          bearing:
+                            type: integer
+                            minimum: 0
+                            maximum: 360
+                      - type: object
+                        required:
+                          - hSpeed
+                          - bearing
+                          - vSpeed
+                          - vDirection
+                        properties:
+                          hSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 2047
+                          bearing:
+                            type: integer
+                            minimum: 0
+                            maximum: 360
+                          vSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 255
+                          vDirection:
+                            type: string
+                            enum:
+                              - UPWARD
+                              - DOWNWARD
+                      - type: object
+                        required:
+                          - hSpeed
+                          - bearing
+                          - hUncertainty
+                        properties:
+                          hSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 2047
+                          bearing:
+                            type: integer
+                            minimum: 0
+                            maximum: 360
+                          hUncertainty:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 255
+                      - type: object
+                        required:
+                          - hSpeed
+                          - bearing
+                          - vSpeed
+                          - vDirection
+                          - hUncertainty
+                          - vUncertainty
+                        properties:
+                          hSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 2047
+                          bearing:
+                            type: integer
+                            minimum: 0
+                            maximum: 360
+                          vSpeed:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 255
+                          vDirection:
+                            type: string
+                            enum:
+                              - UPWARD
+                              - DOWNWARD
+                          hUncertainty:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 255
+                          vUncertainty:
+                            type: number
+                            format: float
+                            minimum: 0
+                            maximum: 255
+                  civicAddress:
+                    type: object
+                    properties:
+                      country:
+                        type: string
+                      A1:
+                        type: string
+                      A2:
+                        type: string
+                      A3:
+                        type: string
+                      A4:
+                        type: string
+                      A5:
+                        type: string
+                      A6:
+                        type: string
+                      PRD:
+                        type: string
+                      POD:
+                        type: string
+                      STS:
+                        type: string
+                      HNO:
+                        type: string
+                      HNS:
+                        type: string
+                      LMK:
+                        type: string
+                      LOC:
+                        type: string
+                      NAM:
+                        type: string
+                      PC:
+                        type: string
+                      BLD:
+                        type: string
+                      UNIT:
+                        type: string
+                      ROOM:
+                        type: string
+                      PLC:
+                        type: string
+                      PCN:
+                        type: string
+                      POBOX:
+                        type: string
+                      ADDCODE:
+                        type: string
+                      SEAT:
+                        type: string
+                      RD:
+                        type: string
+                      RDSEC:
+                        type: string
+                      RDBR:
+                        type: string
+                      RDSUBBR:
+                        type: string
+                      PRM:
+                        type: string
+                      POM:
+                        type: string
+                  positioningDataList:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - method
+                        - mode
+                        - usage
+                      properties:
+                        method:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - CELLID
+                                - ECID
+                                - OTDOA
+                                - BAROMETRIC_PRESSURE
+                                - WLAN
+                                - BLUETOOTH
+                                - MBS
+                            - type: string
+                        mode:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UE_BASED
+                                - UE_ASSISTED
+                                - CONVENTIONAL
+                            - type: string
+                        usage:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UNSUCCESS
+                                - SUCCESS_RESULTS_NOT_USED
+                                - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                                - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                                - SUCCESS_METHOD_NOT_DETERMINED
+                            - type: string
+                    minItems: 1
+                  gnssPositioningDataList:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - mode
+                        - gnss
+                        - usage
+                      properties:
+                        mode:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UE_BASED
+                                - UE_ASSISTED
+                                - CONVENTIONAL
+                            - type: string
+                        gnss:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - GPS
+                                - GALILEO
+                                - SBAS
+                                - MODERNIZED_GPS
+                                - QZSS
+                                - GLONASS
+                            - type: string
+                        usage:
+                          anyOf:
+                            - type: string
+                              enum:
+                                - UNSUCCESS
+                                - SUCCESS_RESULTS_NOT_USED
+                                - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                                - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                                - SUCCESS_METHOD_NOT_DETERMINED
+                            - type: string
+                    minItems: 1
+                  ecgi:
+                    type: object
+                    properties:
+                      plmnId:
+                        type: object
+                        properties:
+                          mcc:
+                            type: string
+                            pattern: '^\d{3}$'
+                          mnc:
+                            type: string
+                            pattern: '^\d{2,3}$'
+                        required:
+                          - mcc
+                          - mnc
+                      eutraCellId:
+                        type: string
+                        pattern: '^[A-Fa-f0-9]{7}$'
+                    required:
+                      - plmnId
+                      - eutraCellId
+                  ncgi:
+                    type: object
+                    properties:
+                      plmnId:
+                        type: object
+                        properties:
+                          mcc:
+                            type: string
+                            pattern: '^\d{3}$'
+                          mnc:
+                            type: string
+                            pattern: '^\d{2,3}$'
+                        required:
+                          - mcc
+                          - mnc
+                      nrCellId:
+                        type: string
+                        pattern: '^[A-Fa-f0-9]{9}$'
+                    required:
+                      - plmnId
+                      - nrCellId
+                  altitude:
+                    type: number
+                    format: float
+                    minimum: -32767
+                    maximum: 32767
+                  barometricPressure:
+                    type: integer
+                    minimum: 30000
+                    maximum: 115000
+        '400':
+          description: Bad request
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '401':
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '403':
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '404':
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '411':
+          description: Length Required
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '413':
+          description: Payload Too Large
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '415':
+          description: Unsupported Media Type
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '429':
+          description: Too Many Requests
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '500':
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        '504':
+          description: Gateway Timeout
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+        default:
+          description: Generic Error
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            nlmf-loc: Access to the Nlmf_Location API
+  schemas:
+    InputData:
+      type: object
+      not:
+        required:
+          - ecgi
+          - ncgi
+      properties:
+        externalClientType:
+          anyOf:
+            - type: string
+              enum:
+                - EMERGENCY_SERVICES
+                - VALUE_ADDED_SERVICES
+                - PLMN_OPERATOR_SERVICES
+                - LAWFUL_INTERCEPT_SERVICES
+                - PLMN_OPERATOR_BROADCAST_SERVICES
+                - PLMN_OPERATOR_OM
+                - PLMN_OPERATOR_ANONYMOUS_STATISTICS
+                - PLMN_OPERATOR_TARGET_MS_SERVICE_SUPPORT
+            - type: string
+        correlationID:
+          type: string
+          minLength: 1
+          maxLength: 255
+        amfId:
+          type: string
+          format: uuid
+        locationQoS:
+          type: object
+          properties:
+            hAccuracy:
+              type: number
+              format: float
+              minimum: 0
+            vAccuracy:
+              type: number
+              format: float
+              minimum: 0
+            verticalRequested:
+              type: boolean
+            responseTime:
+              anyOf:
+                - type: string
+                  enum:
+                    - LOW_DELAY
+                    - DELAY_TOLERANT
+                - type: string
+        supportedGADShapes:
+          type: array
+          items:
+            anyOf:
+              - type: string
+                enum:
+                  - POINT
+                  - POINT_UNCERTAINTY_CIRCLE
+                  - POINT_UNCERTAINTY_ELLIPSE
+                  - POLYGON
+                  - POINT_ALTITUDE
+                  - POINT_ALTITUDE_UNCERTAINTY
+                  - ELLIPSOID_ARC
+              - type: string
+          minItems: 1
+        supi:
+          type: string
+          pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+        pei:
+          type: string
+          pattern: '^(imei-[0-9]{15}|imeisv-[0-9]{16}|.+)$'
+        gpsi:
+          type: string
+          pattern: '^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$'
+        ecgi:
+          type: object
+          properties:
+            plmnId:
+              type: object
+              properties:
+                mcc:
+                  type: string
+                  pattern: '^\d{3}$'
+                mnc:
+                  type: string
+                  pattern: '^\d{2,3}$'
+              required:
+                - mcc
+                - mnc
+            eutraCellId:
+              type: string
+              pattern: '^[A-Fa-f0-9]{7}$'
+          required:
+            - plmnId
+            - eutraCellId
+        ncgi:
+          type: object
+          properties:
+            plmnId:
+              type: object
+              properties:
+                mcc:
+                  type: string
+                  pattern: '^\d{3}$'
+                mnc:
+                  type: string
+                  pattern: '^\d{2,3}$'
+              required:
+                - mcc
+                - mnc
+            nrCellId:
+              type: string
+              pattern: '^[A-Fa-f0-9]{9}$'
+          required:
+            - plmnId
+            - nrCellId
+        priority:
+          anyOf:
+            - type: string
+              enum:
+                - HIGHEST_PRIORITY
+                - NORMAL_PRIORITY
+            - type: string
+        velocityRequested:
+          anyOf:
+            - type: string
+              enum:
+                - VELOCITY_IS_NOT_REQUESTED
+                - VELOCITY_IS_REQUESTED
+            - type: string
+    LocationData:
+      type: object
+      required:
+        - locationEstimate
+      properties:
+        locationEstimate:
+          anyOf:
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                    - uncertainty
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+                    uncertainty:
+                      type: number
+                      format: float
+                      minimum: 0
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                    - uncertaintyEllipse
+                    - confidence
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+                    uncertaintyEllipse:
+                      type: object
+                      required:
+                        - semiMajor
+                        - semiMinor
+                        - orientationMajor
+                      properties:
+                        semiMajor:
+                          type: number
+                          format: float
+                          minimum: 0
+                        semiMinor:
+                          type: number
+                          format: float
+                          minimum: 0
+                        orientationMajor:
+                          type: integer
+                          minimum: 0
+                          maximum: 180
+                    confidence:
+                      type: integer
+                      minimum: 0
+                      maximum: 100
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - pointList
+                  properties:
+                    pointList:
+                      type: array
+                      items:
+                        type: object
+                        required:
+                          - lon
+                          - lat
+                        properties:
+                          lon:
+                            type: number
+                            format: float
+                            minimum: -180
+                            maximum: 180
+                          lat:
+                            type: number
+                            format: float
+                            minimum: -90
+                            maximum: 90
+                      minItems: 3
+                      maxItems: 15
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                    - altitude
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+                    altitude:
+                      type: number
+                      format: float
+                      minimum: -32767
+                      maximum: 32767
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                    - altitude
+                    - uncertaintyEllipse
+                    - uncertaintyAltitude
+                    - confidence
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+                    altitude:
+                      type: number
+                      format: float
+                      minimum: -32767
+                      maximum: 32767
+                    uncertaintyEllipse:
+                      type: object
+                      required:
+                        - semiMajor
+                        - semiMinor
+                        - orientationMajor
+                      properties:
+                        semiMajor:
+                          type: number
+                          format: float
+                          minimum: 0
+                        semiMinor:
+                          type: number
+                          format: float
+                          minimum: 0
+                        orientationMajor:
+                          type: integer
+                          minimum: 0
+                          maximum: 180
+                    uncertaintyAltitude:
+                      type: number
+                      format: float
+                      minimum: 0
+                    confidence:
+                      type: integer
+                      minimum: 0
+                      maximum: 100
+            - allOf:
+                - type: object
+                  required:
+                    - shape
+                  properties:
+                    shape:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - POINT
+                            - POINT_UNCERTAINTY_CIRCLE
+                            - POINT_UNCERTAINTY_ELLIPSE
+                            - POLYGON
+                            - POINT_ALTITUDE
+                            - POINT_ALTITUDE_UNCERTAINTY
+                            - ELLIPSOID_ARC
+                        - type: string
+                  discriminator:
+                    propertyName: shape
+                    mapping:
+                      POINT: '#/components/schemas/Point'
+                      POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                      POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                      POLYGON: '#/components/schemas/Polygon'
+                      POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                      POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                      ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+                - type: object
+                  required:
+                    - point
+                    - innerRadius
+                    - uncertaintyRadius
+                    - offsetAngle
+                    - includedAngle
+                    - confidence
+                  properties:
+                    point:
+                      type: object
+                      required:
+                        - lon
+                        - lat
+                      properties:
+                        lon:
+                          type: number
+                          format: float
+                          minimum: -180
+                          maximum: 180
+                        lat:
+                          type: number
+                          format: float
+                          minimum: -90
+                          maximum: 90
+                    innerRadius:
+                      type: integer
+                      format: int32
+                      minimum: 0
+                      maximum: 327675
+                    uncertaintyRadius:
+                      type: number
+                      format: float
+                      minimum: 0
+                    offsetAngle:
+                      type: integer
+                      minimum: 0
+                      maximum: 360
+                    includedAngle:
+                      type: integer
+                      minimum: 0
+                      maximum: 360
+                    confidence:
+                      type: integer
+                      minimum: 0
+                      maximum: 100
+        accuracyFulfilmentIndicator:
+          anyOf:
+            - type: string
+              enum:
+                - REQUESTED_ACCURACY_FULFILLED
+                - REQUESTED_ACCURACY_NOT_FULFILLED
+            - type: string
+        ageOfLocationEstimate:
+          type: integer
+          minimum: 0
+          maximum: 32767
+        velocityEstimate:
+          oneOf:
+            - type: object
+              required:
+                - hSpeed
+                - bearing
+              properties:
+                hSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 2047
+                bearing:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+            - type: object
+              required:
+                - hSpeed
+                - bearing
+                - vSpeed
+                - vDirection
+              properties:
+                hSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 2047
+                bearing:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+                vSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 255
+                vDirection:
+                  type: string
+                  enum:
+                    - UPWARD
+                    - DOWNWARD
+            - type: object
+              required:
+                - hSpeed
+                - bearing
+                - hUncertainty
+              properties:
+                hSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 2047
+                bearing:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+                hUncertainty:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 255
+            - type: object
+              required:
+                - hSpeed
+                - bearing
+                - vSpeed
+                - vDirection
+                - hUncertainty
+                - vUncertainty
+              properties:
+                hSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 2047
+                bearing:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+                vSpeed:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 255
+                vDirection:
+                  type: string
+                  enum:
+                    - UPWARD
+                    - DOWNWARD
+                hUncertainty:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 255
+                vUncertainty:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 255
+        civicAddress:
+          type: object
+          properties:
+            country:
+              type: string
+            A1:
+              type: string
+            A2:
+              type: string
+            A3:
+              type: string
+            A4:
+              type: string
+            A5:
+              type: string
+            A6:
+              type: string
+            PRD:
+              type: string
+            POD:
+              type: string
+            STS:
+              type: string
+            HNO:
+              type: string
+            HNS:
+              type: string
+            LMK:
+              type: string
+            LOC:
+              type: string
+            NAM:
+              type: string
+            PC:
+              type: string
+            BLD:
+              type: string
+            UNIT:
+              type: string
+            ROOM:
+              type: string
+            PLC:
+              type: string
+            PCN:
+              type: string
+            POBOX:
+              type: string
+            ADDCODE:
+              type: string
+            SEAT:
+              type: string
+            RD:
+              type: string
+            RDSEC:
+              type: string
+            RDBR:
+              type: string
+            RDSUBBR:
+              type: string
+            PRM:
+              type: string
+            POM:
+              type: string
+        positioningDataList:
+          type: array
+          items:
+            type: object
+            required:
+              - method
+              - mode
+              - usage
+            properties:
+              method:
+                anyOf:
+                  - type: string
+                    enum:
+                      - CELLID
+                      - ECID
+                      - OTDOA
+                      - BAROMETRIC_PRESSURE
+                      - WLAN
+                      - BLUETOOTH
+                      - MBS
+                  - type: string
+              mode:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UE_BASED
+                      - UE_ASSISTED
+                      - CONVENTIONAL
+                  - type: string
+              usage:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UNSUCCESS
+                      - SUCCESS_RESULTS_NOT_USED
+                      - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                      - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                      - SUCCESS_METHOD_NOT_DETERMINED
+                  - type: string
+          minItems: 1
+        gnssPositioningDataList:
+          type: array
+          items:
+            type: object
+            required:
+              - mode
+              - gnss
+              - usage
+            properties:
+              mode:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UE_BASED
+                      - UE_ASSISTED
+                      - CONVENTIONAL
+                  - type: string
+              gnss:
+                anyOf:
+                  - type: string
+                    enum:
+                      - GPS
+                      - GALILEO
+                      - SBAS
+                      - MODERNIZED_GPS
+                      - QZSS
+                      - GLONASS
+                  - type: string
+              usage:
+                anyOf:
+                  - type: string
+                    enum:
+                      - UNSUCCESS
+                      - SUCCESS_RESULTS_NOT_USED
+                      - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                      - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                      - SUCCESS_METHOD_NOT_DETERMINED
+                  - type: string
+          minItems: 1
+        ecgi:
+          type: object
+          properties:
+            plmnId:
+              type: object
+              properties:
+                mcc:
+                  type: string
+                  pattern: '^\d{3}$'
+                mnc:
+                  type: string
+                  pattern: '^\d{2,3}$'
+              required:
+                - mcc
+                - mnc
+            eutraCellId:
+              type: string
+              pattern: '^[A-Fa-f0-9]{7}$'
+          required:
+            - plmnId
+            - eutraCellId
+        ncgi:
+          type: object
+          properties:
+            plmnId:
+              type: object
+              properties:
+                mcc:
+                  type: string
+                  pattern: '^\d{3}$'
+                mnc:
+                  type: string
+                  pattern: '^\d{2,3}$'
+              required:
+                - mcc
+                - mnc
+            nrCellId:
+              type: string
+              pattern: '^[A-Fa-f0-9]{9}$'
+          required:
+            - plmnId
+            - nrCellId
+        altitude:
+          type: number
+          format: float
+          minimum: -32767
+          maximum: 32767
+        barometricPressure:
+          type: integer
+          minimum: 30000
+          maximum: 115000
+    GeographicArea:
+      anyOf:
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+                - uncertainty
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+                uncertainty:
+                  type: number
+                  format: float
+                  minimum: 0
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+                - uncertaintyEllipse
+                - confidence
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+                uncertaintyEllipse:
+                  type: object
+                  required:
+                    - semiMajor
+                    - semiMinor
+                    - orientationMajor
+                  properties:
+                    semiMajor:
+                      type: number
+                      format: float
+                      minimum: 0
+                    semiMinor:
+                      type: number
+                      format: float
+                      minimum: 0
+                    orientationMajor:
+                      type: integer
+                      minimum: 0
+                      maximum: 180
+                confidence:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - pointList
+              properties:
+                pointList:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - lon
+                      - lat
+                    properties:
+                      lon:
+                        type: number
+                        format: float
+                        minimum: -180
+                        maximum: 180
+                      lat:
+                        type: number
+                        format: float
+                        minimum: -90
+                        maximum: 90
+                  minItems: 3
+                  maxItems: 15
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+                - altitude
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+                altitude:
+                  type: number
+                  format: float
+                  minimum: -32767
+                  maximum: 32767
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+                - altitude
+                - uncertaintyEllipse
+                - uncertaintyAltitude
+                - confidence
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+                altitude:
+                  type: number
+                  format: float
+                  minimum: -32767
+                  maximum: 32767
+                uncertaintyEllipse:
+                  type: object
+                  required:
+                    - semiMajor
+                    - semiMinor
+                    - orientationMajor
+                  properties:
+                    semiMajor:
+                      type: number
+                      format: float
+                      minimum: 0
+                    semiMinor:
+                      type: number
+                      format: float
+                      minimum: 0
+                    orientationMajor:
+                      type: integer
+                      minimum: 0
+                      maximum: 180
+                uncertaintyAltitude:
+                  type: number
+                  format: float
+                  minimum: 0
+                confidence:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+        - allOf:
+            - type: object
+              required:
+                - shape
+              properties:
+                shape:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - POINT
+                        - POINT_UNCERTAINTY_CIRCLE
+                        - POINT_UNCERTAINTY_ELLIPSE
+                        - POLYGON
+                        - POINT_ALTITUDE
+                        - POINT_ALTITUDE_UNCERTAINTY
+                        - ELLIPSOID_ARC
+                    - type: string
+              discriminator:
+                propertyName: shape
+                mapping:
+                  POINT: '#/components/schemas/Point'
+                  POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+                  POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+                  POLYGON: '#/components/schemas/Polygon'
+                  POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+                  POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+                  ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+            - type: object
+              required:
+                - point
+                - innerRadius
+                - uncertaintyRadius
+                - offsetAngle
+                - includedAngle
+                - confidence
+              properties:
+                point:
+                  type: object
+                  required:
+                    - lon
+                    - lat
+                  properties:
+                    lon:
+                      type: number
+                      format: float
+                      minimum: -180
+                      maximum: 180
+                    lat:
+                      type: number
+                      format: float
+                      minimum: -90
+                      maximum: 90
+                innerRadius:
+                  type: integer
+                  format: int32
+                  minimum: 0
+                  maximum: 327675
+                uncertaintyRadius:
+                  type: number
+                  format: float
+                  minimum: 0
+                offsetAngle:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+                includedAngle:
+                  type: integer
+                  minimum: 0
+                  maximum: 360
+                confidence:
+                  type: integer
+                  minimum: 0
+                  maximum: 100
+    GADShape:
+      type: object
+      required:
+        - shape
+      properties:
+        shape:
+          anyOf:
+            - type: string
+              enum:
+                - POINT
+                - POINT_UNCERTAINTY_CIRCLE
+                - POINT_UNCERTAINTY_ELLIPSE
+                - POLYGON
+                - POINT_ALTITUDE
+                - POINT_ALTITUDE_UNCERTAINTY
+                - ELLIPSOID_ARC
+            - type: string
+      discriminator:
+        propertyName: shape
+        mapping:
+          POINT: '#/components/schemas/Point'
+          POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+          POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+          POLYGON: '#/components/schemas/Polygon'
+          POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+          POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+          ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+    Point:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+    PointUncertaintyCircle:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+            - uncertainty
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+            uncertainty:
+              type: number
+              format: float
+              minimum: 0
+    PointUncertaintyEllipse:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+            - uncertaintyEllipse
+            - confidence
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+            uncertaintyEllipse:
+              type: object
+              required:
+                - semiMajor
+                - semiMinor
+                - orientationMajor
+              properties:
+                semiMajor:
+                  type: number
+                  format: float
+                  minimum: 0
+                semiMinor:
+                  type: number
+                  format: float
+                  minimum: 0
+                orientationMajor:
+                  type: integer
+                  minimum: 0
+                  maximum: 180
+            confidence:
+              type: integer
+              minimum: 0
+              maximum: 100
+    Polygon:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - pointList
+          properties:
+            pointList:
+              type: array
+              items:
+                type: object
+                required:
+                  - lon
+                  - lat
+                properties:
+                  lon:
+                    type: number
+                    format: float
+                    minimum: -180
+                    maximum: 180
+                  lat:
+                    type: number
+                    format: float
+                    minimum: -90
+                    maximum: 90
+              minItems: 3
+              maxItems: 15
+    PointAltitude:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+            - altitude
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+            altitude:
+              type: number
+              format: float
+              minimum: -32767
+              maximum: 32767
+    PointAltitudeUncertainty:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+            - altitude
+            - uncertaintyEllipse
+            - uncertaintyAltitude
+            - confidence
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+            altitude:
+              type: number
+              format: float
+              minimum: -32767
+              maximum: 32767
+            uncertaintyEllipse:
+              type: object
+              required:
+                - semiMajor
+                - semiMinor
+                - orientationMajor
+              properties:
+                semiMajor:
+                  type: number
+                  format: float
+                  minimum: 0
+                semiMinor:
+                  type: number
+                  format: float
+                  minimum: 0
+                orientationMajor:
+                  type: integer
+                  minimum: 0
+                  maximum: 180
+            uncertaintyAltitude:
+              type: number
+              format: float
+              minimum: 0
+            confidence:
+              type: integer
+              minimum: 0
+              maximum: 100
+    EllipsoidArc:
+      allOf:
+        - type: object
+          required:
+            - shape
+          properties:
+            shape:
+              anyOf:
+                - type: string
+                  enum:
+                    - POINT
+                    - POINT_UNCERTAINTY_CIRCLE
+                    - POINT_UNCERTAINTY_ELLIPSE
+                    - POLYGON
+                    - POINT_ALTITUDE
+                    - POINT_ALTITUDE_UNCERTAINTY
+                    - ELLIPSOID_ARC
+                - type: string
+          discriminator:
+            propertyName: shape
+            mapping:
+              POINT: '#/components/schemas/Point'
+              POINT_UNCERTAINTY_CIRCLE: '#/components/schemas/PointUncertaintyCircle'
+              POINT_UNCERTAINTY_ELLIPSE: '#/components/schemas/PointUncertaintyEllipse'
+              POLYGON: '#/components/schemas/Polygon'
+              POINT_ALTITUDE: '#/components/schemas/PointAltitude'
+              POINT_ALTITUDE_UNCERTAINTY: '#/components/schemas/PointAltitudeUncertainty'
+              ELLIPSOID_ARC: '#/components/schemas/EllipsoidArc'
+        - type: object
+          required:
+            - point
+            - innerRadius
+            - uncertaintyRadius
+            - offsetAngle
+            - includedAngle
+            - confidence
+          properties:
+            point:
+              type: object
+              required:
+                - lon
+                - lat
+              properties:
+                lon:
+                  type: number
+                  format: float
+                  minimum: -180
+                  maximum: 180
+                lat:
+                  type: number
+                  format: float
+                  minimum: -90
+                  maximum: 90
+            innerRadius:
+              type: integer
+              format: int32
+              minimum: 0
+              maximum: 327675
+            uncertaintyRadius:
+              type: number
+              format: float
+              minimum: 0
+            offsetAngle:
+              type: integer
+              minimum: 0
+              maximum: 360
+            includedAngle:
+              type: integer
+              minimum: 0
+              maximum: 360
+            confidence:
+              type: integer
+              minimum: 0
+              maximum: 100
+    GeographicalCoordinates:
+      type: object
+      required:
+        - lon
+        - lat
+      properties:
+        lon:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+        lat:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+    UncertaintyEllipse:
+      type: object
+      required:
+        - semiMajor
+        - semiMinor
+        - orientationMajor
+      properties:
+        semiMajor:
+          type: number
+          format: float
+          minimum: 0
+        semiMinor:
+          type: number
+          format: float
+          minimum: 0
+        orientationMajor:
+          type: integer
+          minimum: 0
+          maximum: 180
+    PointList:
+      type: array
+      items:
+        type: object
+        required:
+          - lon
+          - lat
+        properties:
+          lon:
+            type: number
+            format: float
+            minimum: -180
+            maximum: 180
+          lat:
+            type: number
+            format: float
+            minimum: -90
+            maximum: 90
+      minItems: 3
+      maxItems: 15
+    LocationQoS:
+      type: object
+      properties:
+        hAccuracy:
+          type: number
+          format: float
+          minimum: 0
+        vAccuracy:
+          type: number
+          format: float
+          minimum: 0
+        verticalRequested:
+          type: boolean
+        responseTime:
+          anyOf:
+            - type: string
+              enum:
+                - LOW_DELAY
+                - DELAY_TOLERANT
+            - type: string
+    PositioningMethodAndUsage:
+      type: object
+      required:
+        - method
+        - mode
+        - usage
+      properties:
+        method:
+          anyOf:
+            - type: string
+              enum:
+                - CELLID
+                - ECID
+                - OTDOA
+                - BAROMETRIC_PRESSURE
+                - WLAN
+                - BLUETOOTH
+                - MBS
+            - type: string
+        mode:
+          anyOf:
+            - type: string
+              enum:
+                - UE_BASED
+                - UE_ASSISTED
+                - CONVENTIONAL
+            - type: string
+        usage:
+          anyOf:
+            - type: string
+              enum:
+                - UNSUCCESS
+                - SUCCESS_RESULTS_NOT_USED
+                - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                - SUCCESS_METHOD_NOT_DETERMINED
+            - type: string
+    GnssPositioningMethodAndUsage:
+      type: object
+      required:
+        - mode
+        - gnss
+        - usage
+      properties:
+        mode:
+          anyOf:
+            - type: string
+              enum:
+                - UE_BASED
+                - UE_ASSISTED
+                - CONVENTIONAL
+            - type: string
+        gnss:
+          anyOf:
+            - type: string
+              enum:
+                - GPS
+                - GALILEO
+                - SBAS
+                - MODERNIZED_GPS
+                - QZSS
+                - GLONASS
+            - type: string
+        usage:
+          anyOf:
+            - type: string
+              enum:
+                - UNSUCCESS
+                - SUCCESS_RESULTS_NOT_USED
+                - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+                - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+                - SUCCESS_METHOD_NOT_DETERMINED
+            - type: string
+    CivicAddress:
+      type: object
+      properties:
+        country:
+          type: string
+        A1:
+          type: string
+        A2:
+          type: string
+        A3:
+          type: string
+        A4:
+          type: string
+        A5:
+          type: string
+        A6:
+          type: string
+        PRD:
+          type: string
+        POD:
+          type: string
+        STS:
+          type: string
+        HNO:
+          type: string
+        HNS:
+          type: string
+        LMK:
+          type: string
+        LOC:
+          type: string
+        NAM:
+          type: string
+        PC:
+          type: string
+        BLD:
+          type: string
+        UNIT:
+          type: string
+        ROOM:
+          type: string
+        PLC:
+          type: string
+        PCN:
+          type: string
+        POBOX:
+          type: string
+        ADDCODE:
+          type: string
+        SEAT:
+          type: string
+        RD:
+          type: string
+        RDSEC:
+          type: string
+        RDBR:
+          type: string
+        RDSUBBR:
+          type: string
+        PRM:
+          type: string
+        POM:
+          type: string
+    VelocityEstimate:
+      oneOf:
+        - type: object
+          required:
+            - hSpeed
+            - bearing
+          properties:
+            hSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2047
+            bearing:
+              type: integer
+              minimum: 0
+              maximum: 360
+        - type: object
+          required:
+            - hSpeed
+            - bearing
+            - vSpeed
+            - vDirection
+          properties:
+            hSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2047
+            bearing:
+              type: integer
+              minimum: 0
+              maximum: 360
+            vSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 255
+            vDirection:
+              type: string
+              enum:
+                - UPWARD
+                - DOWNWARD
+        - type: object
+          required:
+            - hSpeed
+            - bearing
+            - hUncertainty
+          properties:
+            hSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2047
+            bearing:
+              type: integer
+              minimum: 0
+              maximum: 360
+            hUncertainty:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 255
+        - type: object
+          required:
+            - hSpeed
+            - bearing
+            - vSpeed
+            - vDirection
+            - hUncertainty
+            - vUncertainty
+          properties:
+            hSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 2047
+            bearing:
+              type: integer
+              minimum: 0
+              maximum: 360
+            vSpeed:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 255
+            vDirection:
+              type: string
+              enum:
+                - UPWARD
+                - DOWNWARD
+            hUncertainty:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 255
+            vUncertainty:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 255
+    HorizontalVelocity:
+      type: object
+      required:
+        - hSpeed
+        - bearing
+      properties:
+        hSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2047
+        bearing:
+          type: integer
+          minimum: 0
+          maximum: 360
+    HorizontalWithVerticalVelocity:
+      type: object
+      required:
+        - hSpeed
+        - bearing
+        - vSpeed
+        - vDirection
+      properties:
+        hSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2047
+        bearing:
+          type: integer
+          minimum: 0
+          maximum: 360
+        vSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 255
+        vDirection:
+          type: string
+          enum:
+            - UPWARD
+            - DOWNWARD
+    HorizontalVelocityWithUncertainty:
+      type: object
+      required:
+        - hSpeed
+        - bearing
+        - hUncertainty
+      properties:
+        hSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2047
+        bearing:
+          type: integer
+          minimum: 0
+          maximum: 360
+        hUncertainty:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 255
+    HorizontalWithVerticalVelocityAndUncertainty:
+      type: object
+      required:
+        - hSpeed
+        - bearing
+        - vSpeed
+        - vDirection
+        - hUncertainty
+        - vUncertainty
+      properties:
+        hSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2047
+        bearing:
+          type: integer
+          minimum: 0
+          maximum: 360
+        vSpeed:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 255
+        vDirection:
+          type: string
+          enum:
+            - UPWARD
+            - DOWNWARD
+        hUncertainty:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 255
+        vUncertainty:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 255
+    Altitude:
+      type: number
+      format: float
+      minimum: -32767
+      maximum: 32767
+    Angle:
+      type: integer
+      minimum: 0
+      maximum: 360
+    Uncertainty:
+      type: number
+      format: float
+      minimum: 0
+    Orientation:
+      type: integer
+      minimum: 0
+      maximum: 180
+    Confidence:
+      type: integer
+      minimum: 0
+      maximum: 100
+    Accuracy:
+      type: number
+      format: float
+      minimum: 0
+    InnerRadius:
+      type: integer
+      format: int32
+      minimum: 0
+      maximum: 327675
+    CorrelationID:
+      type: string
+      minLength: 1
+      maxLength: 255
+    AgeOfLocationEstimate:
+      type: integer
+      minimum: 0
+      maximum: 32767
+    HorizontalSpeed:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 2047
+    VerticalSpeed:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 255
+    SpeedUncertainty:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 255
+    BarometricPressure:
+      type: integer
+      minimum: 30000
+      maximum: 115000
+    ExternalClientType:
+      anyOf:
+        - type: string
+          enum:
+            - EMERGENCY_SERVICES
+            - VALUE_ADDED_SERVICES
+            - PLMN_OPERATOR_SERVICES
+            - LAWFUL_INTERCEPT_SERVICES
+            - PLMN_OPERATOR_BROADCAST_SERVICES
+            - PLMN_OPERATOR_OM
+            - PLMN_OPERATOR_ANONYMOUS_STATISTICS
+            - PLMN_OPERATOR_TARGET_MS_SERVICE_SUPPORT
+        - type: string
+    SupportedGADShapes:
+      anyOf:
+        - type: string
+          enum:
+            - POINT
+            - POINT_UNCERTAINTY_CIRCLE
+            - POINT_UNCERTAINTY_ELLIPSE
+            - POLYGON
+            - POINT_ALTITUDE
+            - POINT_ALTITUDE_UNCERTAINTY
+            - ELLIPSOID_ARC
+        - type: string
+    ResponseTime:
+      anyOf:
+        - type: string
+          enum:
+            - LOW_DELAY
+            - DELAY_TOLERANT
+        - type: string
+    PositioningMethod:
+      anyOf:
+        - type: string
+          enum:
+            - CELLID
+            - ECID
+            - OTDOA
+            - BAROMETRIC_PRESSURE
+            - WLAN
+            - BLUETOOTH
+            - MBS
+        - type: string
+    PositioningMode:
+      anyOf:
+        - type: string
+          enum:
+            - UE_BASED
+            - UE_ASSISTED
+            - CONVENTIONAL
+        - type: string
+    GnssId:
+      anyOf:
+        - type: string
+          enum:
+            - GPS
+            - GALILEO
+            - SBAS
+            - MODERNIZED_GPS
+            - QZSS
+            - GLONASS
+        - type: string
+    Usage:
+      anyOf:
+        - type: string
+          enum:
+            - UNSUCCESS
+            - SUCCESS_RESULTS_NOT_USED
+            - SUCCESS_RESULTS_USED_TO_VERIFY_LOCATION
+            - SUCCESS_RESULTS_USED_TO_GENERATE_LOCATION
+            - SUCCESS_METHOD_NOT_DETERMINED
+        - type: string
+    LcsPriority:
+      anyOf:
+        - type: string
+          enum:
+            - HIGHEST_PRIORITY
+            - NORMAL_PRIORITY
+        - type: string
+    VelocityRequested:
+      anyOf:
+        - type: string
+          enum:
+            - VELOCITY_IS_NOT_REQUESTED
+            - VELOCITY_IS_REQUESTED
+        - type: string
+    AccuracyFulfilmentIndicator:
+      anyOf:
+        - type: string
+          enum:
+            - REQUESTED_ACCURACY_FULFILLED
+            - REQUESTED_ACCURACY_NOT_FULFILLED
+        - type: string
+    VerticalDirection:
+      type: string
+      enum:
+        - UPWARD
+        - DOWNWARD
+externalDocs:
+  description: 3GPP TS 29.572 V15.3.0; 5G System; Location Management Services; Stage 3
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.572/'

@@ -1,0 +1,312 @@
+openapi: 3.0.0
+info:
+  version: 1.0.1
+  title: Nausf_SoRProtection Service
+  description: AUSF SoR Protection Service
+servers:
+  - url: '{apiRoot}/nausf-sorprotection/v1'
+    variables:
+      apiRoot:
+        default: 'https://example.com'
+        description: apiRoot as defined in subclause 4.4 of 3GPP TS 29.501
+security:
+  - {}
+  - oAuth2ClientCredentials:
+      - nausf-sorprotection
+paths:
+  '/{supi}/ue-sor':
+    post:
+      parameters:
+        - name: supi
+          in: path
+          description: Identifier of the UE
+          required: true
+          schema:
+            type: string
+            pattern: '^(imsi-[0-9]{5,15}|nai-.+|.+)$'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                steeringContainer:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: object
+                        properties:
+                          plmnId:
+                            type: object
+                            properties:
+                              mcc:
+                                type: string
+                                pattern: '^\d{3}$'
+                              mnc:
+                                type: string
+                                pattern: '^\d{2,3}$'
+                            required:
+                              - mcc
+                              - mnc
+                          accessTechList:
+                            type: array
+                            items:
+                              anyOf:
+                                - type: string
+                                  enum:
+                                    - NR
+                                    - EUTRAN_IN_WBS1_MODE_AND_NBS1_MODE
+                                    - EUTRAN_IN_NBS1_MODE_ONLY
+                                    - EUTRAN_IN_WBS1_MODE_ONLY
+                                    - UTRAN
+                                    - GSM_AND_ECGSM_IoT
+                                    - GSM_WITHOUT_ECGSM_IoT
+                                    - ECGSM_IoT_ONLY
+                                    - CDMA_1xRTT
+                                    - CDMA_HRPD
+                                    - GSM_COMPACT
+                                - type: string
+                            minItems: 1
+                        required:
+                          - plmnId
+                      minItems: 1
+                    - type: string
+                      format: base64
+                ackInd:
+                  type: boolean
+              required:
+                - ackInd
+        required: true
+      responses:
+        '200':
+          description: SorSecurityInfo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sorMacIausf:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]{32}$'
+                  counterSor:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]{4}$'
+                  sorXmacIue:
+                    type: string
+                    pattern: '^[A-Fa-f0-9]{32}$'
+                required:
+                  - sorMacIausf
+                  - counterSor
+        '503':
+          description: Service Unavailable
+          content:
+            application/problem+json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  status:
+                    type: integer
+                  detail:
+                    type: string
+                  instance:
+                    type: string
+                  cause:
+                    type: string
+                  invalidParams:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        param:
+                          type: string
+                        reason:
+                          type: string
+                      required:
+                        - param
+                    minItems: 1
+components:
+  securitySchemes:
+    oAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: '{nrfApiRoot}/oauth2/token'
+          scopes:
+            nausf-sorprotection: Access to the Nausf_SoRProtection API
+  schemas:
+    SorInfo:
+      type: object
+      properties:
+        steeringContainer:
+          oneOf:
+            - type: array
+              items:
+                type: object
+                properties:
+                  plmnId:
+                    type: object
+                    properties:
+                      mcc:
+                        type: string
+                        pattern: '^\d{3}$'
+                      mnc:
+                        type: string
+                        pattern: '^\d{2,3}$'
+                    required:
+                      - mcc
+                      - mnc
+                  accessTechList:
+                    type: array
+                    items:
+                      anyOf:
+                        - type: string
+                          enum:
+                            - NR
+                            - EUTRAN_IN_WBS1_MODE_AND_NBS1_MODE
+                            - EUTRAN_IN_NBS1_MODE_ONLY
+                            - EUTRAN_IN_WBS1_MODE_ONLY
+                            - UTRAN
+                            - GSM_AND_ECGSM_IoT
+                            - GSM_WITHOUT_ECGSM_IoT
+                            - ECGSM_IoT_ONLY
+                            - CDMA_1xRTT
+                            - CDMA_HRPD
+                            - GSM_COMPACT
+                        - type: string
+                    minItems: 1
+                required:
+                  - plmnId
+              minItems: 1
+            - type: string
+              format: base64
+        ackInd:
+          type: boolean
+      required:
+        - ackInd
+    SorSecurityInfo:
+      type: object
+      properties:
+        sorMacIausf:
+          type: string
+          pattern: '^[A-Fa-f0-9]{32}$'
+        counterSor:
+          type: string
+          pattern: '^[A-Fa-f0-9]{4}$'
+        sorXmacIue:
+          type: string
+          pattern: '^[A-Fa-f0-9]{32}$'
+      required:
+        - sorMacIausf
+        - counterSor
+    SteeringContainer:
+      oneOf:
+        - type: array
+          items:
+            type: object
+            properties:
+              plmnId:
+                type: object
+                properties:
+                  mcc:
+                    type: string
+                    pattern: '^\d{3}$'
+                  mnc:
+                    type: string
+                    pattern: '^\d{2,3}$'
+                required:
+                  - mcc
+                  - mnc
+              accessTechList:
+                type: array
+                items:
+                  anyOf:
+                    - type: string
+                      enum:
+                        - NR
+                        - EUTRAN_IN_WBS1_MODE_AND_NBS1_MODE
+                        - EUTRAN_IN_NBS1_MODE_ONLY
+                        - EUTRAN_IN_WBS1_MODE_ONLY
+                        - UTRAN
+                        - GSM_AND_ECGSM_IoT
+                        - GSM_WITHOUT_ECGSM_IoT
+                        - ECGSM_IoT_ONLY
+                        - CDMA_1xRTT
+                        - CDMA_HRPD
+                        - GSM_COMPACT
+                    - type: string
+                minItems: 1
+            required:
+              - plmnId
+          minItems: 1
+        - type: string
+          format: base64
+    SteeringInfo:
+      type: object
+      properties:
+        plmnId:
+          type: object
+          properties:
+            mcc:
+              type: string
+              pattern: '^\d{3}$'
+            mnc:
+              type: string
+              pattern: '^\d{2,3}$'
+          required:
+            - mcc
+            - mnc
+        accessTechList:
+          type: array
+          items:
+            anyOf:
+              - type: string
+                enum:
+                  - NR
+                  - EUTRAN_IN_WBS1_MODE_AND_NBS1_MODE
+                  - EUTRAN_IN_NBS1_MODE_ONLY
+                  - EUTRAN_IN_WBS1_MODE_ONLY
+                  - UTRAN
+                  - GSM_AND_ECGSM_IoT
+                  - GSM_WITHOUT_ECGSM_IoT
+                  - ECGSM_IoT_ONLY
+                  - CDMA_1xRTT
+                  - CDMA_HRPD
+                  - GSM_COMPACT
+              - type: string
+          minItems: 1
+      required:
+        - plmnId
+    SorMac:
+      type: string
+      pattern: '^[A-Fa-f0-9]{32}$'
+    CounterSor:
+      type: string
+      pattern: '^[A-Fa-f0-9]{4}$'
+    AckInd:
+      type: boolean
+    SecuredPacket:
+      type: string
+      format: base64
+    AccessTech:
+      anyOf:
+        - type: string
+          enum:
+            - NR
+            - EUTRAN_IN_WBS1_MODE_AND_NBS1_MODE
+            - EUTRAN_IN_NBS1_MODE_ONLY
+            - EUTRAN_IN_WBS1_MODE_ONLY
+            - UTRAN
+            - GSM_AND_ECGSM_IoT
+            - GSM_WITHOUT_ECGSM_IoT
+            - ECGSM_IoT_ONLY
+            - CDMA_1xRTT
+            - CDMA_HRPD
+            - GSM_COMPACT
+        - type: string
+externalDocs:
+  description: 3GPP TS 29.509 V15.3.0; 5G System; Authentication Server Services
+  url: 'http://www.3gpp.org/ftp/Specs/archive/29_series/29.509'

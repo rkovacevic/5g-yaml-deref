@@ -1,0 +1,16 @@
+{
+  "name": "5g_yaml_deref",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Robert Kovacevic",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^3.13.1",
+    "json-schema-ref-parser": "^6.1.0",
+    "lodash": "^4.17.11"
+  }
+}
